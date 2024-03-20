@@ -15,7 +15,7 @@ pub enum ClickhouseError {
     #[error("error querying from the database: {0}")]
     QueryError(String),
     #[error("error reading sql file: {0}")]
-    SqlFileReadError(String)
+    SqlFileReadError(String),
 }
 
 impl DatabaseError for ClickhouseError where Self: Sized {}

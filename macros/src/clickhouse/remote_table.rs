@@ -71,39 +71,39 @@ impl RemoteClickhouseTableParse {
 
         let no_file_impls = if table_path.is_none() {
             quote! {
-                    async fn create_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
+                    async fn create_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
                         unreachable!("Not Enabled - No File Path Given In Macro")
                     }
 
-                    async fn create_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, _random_seed: u32) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
+                    async fn create_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, _random_seed: u32) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
                         unreachable!("Not Enabled - No File Path Given In Macro")
                     }
             }
         } else {
             quote! {
-                    async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
-                        let table_sql_path = <Self as db_interfaces::clickhouse::tables::ClickhouseTable>::FILE_PATH;
+                    async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+                        let table_sql_path = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::FILE_PATH;
                         let create_sql = std::fs::read_to_string(table_sql_path)?;
-                        db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
+                        ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
 
                         Ok(())
                     }
 
-                    async fn create_test_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
-                        let table_sql_path = <Self as db_interfaces::clickhouse::tables::ClickhouseTable>::FILE_PATH;
+                    async fn create_test_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+                        let table_sql_path = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::FILE_PATH;
                         let mut create_sql = std::fs::read_to_string(table_sql_path)?;
 
-                        let db = <Self as db_interfaces::clickhouse::tables::ClickhouseTable>::DATABASE_NAME;
+                        let db = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::DATABASE_NAME;
                         create_sql = create_sql.replace(&format!("{db}."), &format!("test_{db}."));
                         create_sql = create_sql.replace(&format!("'{db}'"), &format!("'test_{db}'"));
 
-                        let table_type = <Self as db_interfaces::tables::ClickhouseTable>::TABLE_TYPE;
+                        let table_type = <Self as ::db_interfaces::tables::ClickhouseTable>::TABLE_TYPE;
                         match table_type {
-                            db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
+                            ::db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
-                                create_sql = create_sql.replace(&format!("/{}", <Self as db_interfaces::clickhouse::tables::ClickhouseTable>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as db_interfaces::clickhouse::tables::ClickhouseTable>::TABLE_NAME));
+                                create_sql = create_sql.replace(&format!("/{}", <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::TABLE_NAME));
 
-                                db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
+                                ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
                             }
                         }
 
@@ -116,19 +116,19 @@ impl RemoteClickhouseTableParse {
         let val = quote! {
 
             #[async_trait::async_trait]
-            impl db_interfaces::clickhouse::tables::ClickhouseTable<#dbms> for #table_name {
+            impl ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms> for #table_name {
                 const DATABASE_NAME: &'static str = #database_name;
                 const TABLE_NAME: &'static str = #table_name_lowercase;
                 const FILE_PATH: &'static str = #file_path;
                 const CHILD_TABLES: &'static [#dbms] = #other_tables_needed;
-                const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
+                const TABLE_TYPE: ::db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
                 const TABLE_ENUM: #dbms = #dbms::#enum_name;
                 type ClickhouseDataType = #data_type;
 
                 #no_file_impls
             }
 
-            db_interfaces::database_table!(#table_name, #data_type);
+            ::db_interfaces::database_table!(#table_name, #data_type);
         };
 
         // panic!("TABLE NAME: {:?} -- TABLE TYPE: {:?}", table_name, table_type);
