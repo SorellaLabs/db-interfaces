@@ -50,7 +50,7 @@ macro_rules! clickhouse_dbms {
         }
 
         #[async_trait::async_trait]
-        impl $crate::clickhouse::dbms::ClickhouseDBMS for $dbms {
+        impl ::db_interfaces::clickhouse::dbms::ClickhouseDBMS for $dbms {
             const CLUSTER: Option<&'static str> = Some("eth_cluster0");
 
              fn dependant_tables(&self) -> &[Self] {
@@ -61,7 +61,7 @@ macro_rules! clickhouse_dbms {
                 }
             }
 
-             async fn create_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
+             async fn create_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_table(database).await?
@@ -72,7 +72,7 @@ macro_rules! clickhouse_dbms {
             }
 
 
-             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
+             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_test_table(database, random_seed).await?
@@ -82,7 +82,7 @@ macro_rules! clickhouse_dbms {
                 Ok(())
             }
 
-            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
+            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::drop_test_db(database).await?
