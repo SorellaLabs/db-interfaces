@@ -97,7 +97,7 @@ impl RemoteClickhouseTableParse {
                         create_sql = create_sql.replace(&format!("{db}."), &format!("test_{db}."));
                         create_sql = create_sql.replace(&format!("'{db}'"), &format!("'test_{db}'"));
 
-                        let table_type = <Self as ::db_interfaces::tables::ClickhouseTable>::TABLE_TYPE;
+                        let table_type = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable>::TABLE_TYPE;
                         match table_type {
                             ::db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
