@@ -19,7 +19,7 @@ pub(crate) struct RemoteClickhouseTableParse {
     pub(crate) dbms: Ident,
     pub(crate) table_name: Ident,
     pub(crate) database_name: LitStr,
-    pub(crate) data_type: Ident,
+    pub(crate) data_type: TokenStream,
     pub(crate) other_tables_needed: Vec<Expr>,
 }
 
@@ -155,14 +155,12 @@ impl Parse for RemoteClickhouseTableParse {
         input.parse::<Token![,]>()?;
 
         let data_type = if input.peek(syn::Ident) {
-            input
+            let dt_ident: Ident = input
                 .parse()
-                .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?
+                .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
+            quote!(#dt_ident)
         } else {
-            Ident::new(
-                "::db_interfaces::clickhouse::types::NoneType",
-                table_name.span(),
-            )
+            quote!(::db_interfaces::clickhouse::types::NoneType)
         };
 
         let mut other_tables_needed = Vec::new();
