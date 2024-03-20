@@ -40,34 +40,47 @@ impl RemoteClickhouseTableParse {
             .map(|table| table.into_token_stream())
             .collect_vec();
 
-        let (table_name_lowercase, enum_name, table_type, file_path, other_tables_needed) =
-            if table_path.is_none() {
-                let table_name_str = table_name.clone().to_string().replace("Clickhouse", "");
-                let table_name_lowercase =
-                    add_underscore_and_lower(&table_name_str.replace("Local", "")).to_lowercase();
+        let TableMeta {
+            table_name_lowercase,
+            enum_name,
+            table_type,
+            file_path,
+        } = TableMeta::new(this.into(), table_path.as_ref())?;
 
-                (
-                    table_name_lowercase,
-                    table_name.clone(),
-                    quote!(::db_interfaces::clickhouse::tables::ClickhouseTableKind::None),
-                    quote!(""),
-                    quote!(&[]),
-                )
-            } else {
-                let TableMeta {
-                    table_name_lowercase,
-                    enum_name,
-                    table_type,
-                    file_path,
-                } = TableMeta::new(this.into(), table_path.as_ref())?;
-                (
-                    table_name_lowercase,
-                    enum_name,
-                    table_type,
-                    file_path.into_token_stream(),
-                    quote!(&[#(#dbms::#other_tables_needed),*]),
-                )
-            };
+        let (table_name_lowercase, enum_name, table_type, file_path, other_tables_needed) = (
+            table_name_lowercase,
+            enum_name,
+            table_type,
+            file_path.into_token_stream(),
+            quote!(&[#(#dbms::#other_tables_needed),*]),
+        );
+        // if table_path.is_none() {
+        //     let table_name_str = table_name.clone().to_string().replace("Clickhouse", "");
+        //     let table_name_lowercase =
+        //         add_underscore_and_lower(&table_name_str.replace("Local", "")).to_lowercase();
+
+        //     (
+        //         table_name_lowercase,
+        //         table_name.clone(),
+        //         quote!(::db_interfaces::clickhouse::tables::ClickhouseTableKind::None),
+        //         quote!(""),
+        //         quote!(&[]),
+        //     )
+        // } else {
+        //     let TableMeta {
+        //         table_name_lowercase,
+        //         enum_name,
+        //         table_type,
+        //         file_path,
+        //     } = TableMeta::new(this.into(), table_path.as_ref())?;
+        //     (
+        //         table_name_lowercase,
+        //         enum_name,
+        //         table_type,
+        //         file_path.into_token_stream(),
+        //         quote!(&[#(#dbms::#other_tables_needed),*]),
+        //     )
+        // };
 
         let no_file_impls = if table_path.is_none() {
             quote! {
