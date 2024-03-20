@@ -99,7 +99,7 @@ impl RemoteClickhouseTableParse {
 
                         let table_type = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_TYPE;
                         match table_type {
-                            ::db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
+                            db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
                                 create_sql = create_sql.replace(&format!("/{}", <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_NAME));
 
