@@ -71,21 +71,21 @@ impl RemoteClickhouseTableParse {
 
         let no_file_impls = if table_path.is_none() {
             quote! {
-                    async fn create_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), clickhouse::errors::ClickhouseError> {
+                    async fn create_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                         panic!("Not Enabled - No File Path Given In Macro")
                     }
 
-                    async fn create_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, _random_seed: u32) -> Result<(), clickhouse::errors::ClickhouseError> {
+                    async fn create_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, _random_seed: u32) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                         panic!("Not Enabled - No File Path Given In Macro")
                     }
 
-                    // async fn truncate_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), clickhouse::errors::ClickhouseError> {
+                    // async fn truncate_test_table(_database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                     //     panic!("Not Enabled - No File Path Given In Macro")
                     // }
             }
         } else {
             quote! {
-                    async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), clickhouse::errors::ClickhouseError> {
+                    async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                         let table_sql_path = Self::FILE_PATH;
                         let create_sql = std::fs::read_to_string(table_sql_path)?;
                         database.execute_remote(&create_sql, &()).await?;
@@ -97,7 +97,7 @@ impl RemoteClickhouseTableParse {
                         Ok(())
                     }
 
-                    async fn create_test_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), clickhouse::errors::ClickhouseError> {
+                    async fn create_test_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                         let table_sql_path = Self::FILE_PATH;
                         let mut create_sql = std::fs::read_to_string(table_sql_path)?;
 
