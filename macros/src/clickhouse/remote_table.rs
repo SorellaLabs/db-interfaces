@@ -154,6 +154,7 @@ impl Parse for RemoteClickhouseTableParse {
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table name"))?;
 
         let data_type = if input.peek2(syn::Ident) {
+            panic!("SHOULD NOT BE IT");
             input.parse::<Token![,]>()?;
             let dt_expr: Expr = input
                 .parse()
