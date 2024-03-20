@@ -121,7 +121,7 @@ impl RemoteClickhouseTableParse {
                 const TABLE_NAME: &'static str = #table_name_lowercase;
                 const FILE_PATH: &'static str = #file_path;
                 const CHILD_TABLES: &'static [#dbms] = #other_tables_needed;
-                const TABLE_TYPE: ::db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
+                const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
                 const TABLE_ENUM: #dbms = #dbms::#enum_name;
                 type ClickhouseDataType = #data_type;
 
