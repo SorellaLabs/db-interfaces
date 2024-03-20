@@ -1,8 +1,5 @@
 use super::db::ClickhouseClient;
-use crate::{
-    clickhouse::{errors::ClickhouseError, tables::*},
-    tables::*,
-};
+use crate::clickhouse::errors::ClickhouseError;
 
 #[async_trait::async_trait]
 pub trait ClickhouseDBMS: Sized + Sync + Send {

@@ -1,6 +1,5 @@
 use super::{
     db::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseInsert,
-    utils::*,
 };
 use crate::Database;
 

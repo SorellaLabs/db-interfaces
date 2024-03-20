@@ -1,6 +1,5 @@
 use std::{collections::HashSet, pin::Pin};
 
-use clickhouse::*;
 use eyre::Result;
 use futures::{future::join_all, Future};
 use rand::Rng;
