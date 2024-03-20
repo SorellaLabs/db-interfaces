@@ -1,0 +1,54 @@
+[package]
+name = "db-interfaces"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+# proc macros
+db-interfaces-macros = { path = "../macros" }
+
+# serde
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+erased-serde = "0.3.31"
+
+# clickhouse 
+clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["tls"] }
+
+# error handling
+eyre = "0.6.5"
+thiserror = "1.0.44"
+
+# async 
+tokio = { version = "1.28.2", features = ["full"] }
+async-trait = "0.1.73"
+futures = "0.3.28"
+
+# http/s
+hyper-tls = "0.5.0"
+hyper = { version = "0.14", features = ["full"] }
+reqwest = { version = "0.11.18", features = ["json"] }
+
+# misc
+chrono = "0.4.26"
+dotenv = "0.15.0"
+primitive-types = "0.12.2"
+strum = "0.25"
+strum_macros = "0.25"
+rand = "0.8.5"
+dyn-clone = "1.0.16"
+
+
+[dev-dependencies]
+hex-literal = "0.4.1"
+hex = "0.4.3"
+shellexpand = "3.0.0"
+paste = "1.0.14"
+
+[features]
+test-utils = []

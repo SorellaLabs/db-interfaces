@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "interfaces",
+    "macros"
+]
+
+resolver = "2"
+
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/SorellaLabs"
+repository = "https://github.com/SorellaLabs/db-interfaces"
