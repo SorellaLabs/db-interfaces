@@ -135,7 +135,7 @@ impl RemoteClickhouseTableParse {
                 #no_file_impls
             }
 
-            ::db_interfaces::database_table!(#table_name, #data_type);
+            db_interfaces::database_table!(#table_name, #data_type);
         };
 
         // panic!("TABLE NAME: {:?} -- TABLE TYPE: {:?}", table_name, table_type);
