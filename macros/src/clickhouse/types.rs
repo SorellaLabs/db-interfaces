@@ -7,6 +7,7 @@ use super::{table::ClickhouseTableParse, utils::find_file_path};
 pub(crate) enum ClickhouseTableKind {
     Distributed,
     Remote,
+    RemoteSecure,
     ReplicatedMergeTree,
     ReplicatedAggregatingMergeTree,
     ReplicatedReplacingMergeTree,
@@ -52,7 +53,8 @@ impl From<&ClickhouseTableKind> for &'static str {
     fn from(val: &ClickhouseTableKind) -> Self {
         match val {
             ClickhouseTableKind::Distributed => "Distributed",
-            ClickhouseTableKind::Remote => "remoteSecure",
+            ClickhouseTableKind::Remote => "remote",
+            ClickhouseTableKind::RemoteSecure => "remoteSecure",
             ClickhouseTableKind::ReplicatedMergeTree => "ReplicatedMergeTree",
             ClickhouseTableKind::ReplicatedAggregatingMergeTree => "ReplicatedAggregatingMergeTree",
             ClickhouseTableKind::ReplicatedReplacingMergeTree => "ReplicatedReplacingMergeTree",
@@ -70,6 +72,9 @@ impl From<ClickhouseTableKind> for TokenStream {
             }
             ClickhouseTableKind::Remote => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::Remote }
+            }
+            ClickhouseTableKind::RemoteSecure => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::RemoteSecure }
             }
             ClickhouseTableKind::ReplicatedMergeTree => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedMergeTree }

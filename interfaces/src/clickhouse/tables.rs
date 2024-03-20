@@ -8,6 +8,7 @@ use crate::{database_table, tables::*, Database};
 pub enum ClickhouseTableKind {
     Distributed,
     Remote,
+    RemoteSecure,
     ReplicatedMergeTree,
     ReplicatedAggregatingMergeTree,
     ReplicatedReplacingMergeTree,
