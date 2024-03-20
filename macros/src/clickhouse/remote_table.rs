@@ -49,7 +49,7 @@ impl RemoteClickhouseTableParse {
                 (
                     table_name_lowercase,
                     table_name.clone(),
-                    quote!(::db_interfaces::clickhouse::tables::ClickhouseTableType::None),
+                    quote!(::db_interfaces::clickhouse::tables::ClickhouseTableKind::None),
                     quote!(""),
                     quote!(&[]),
                 )
@@ -99,7 +99,7 @@ impl RemoteClickhouseTableParse {
 
                         let table_type = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_TYPE;
                         match table_type {
-                            db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
+                            db_interfaces::clickhouse::tables::ClickhouseTableKind::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
                                 create_sql = create_sql.replace(&format!("/{}", <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::TABLE_NAME));
 
@@ -121,7 +121,7 @@ impl RemoteClickhouseTableParse {
                 const TABLE_NAME: &'static str = #table_name_lowercase;
                 const FILE_PATH: &'static str = #file_path;
                 const CHILD_TABLES: &'static [#dbms] = #other_tables_needed;
-                const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
+                const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableKind = #table_type;
                 const TABLE_ENUM: #dbms = #dbms::#enum_name;
                 type ClickhouseDataType = #data_type;
 
@@ -141,12 +141,12 @@ impl Parse for RemoteClickhouseTableParse {
     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
         let dbms: Ident = input
             .parse()
-            .map_err(|e| syn::Error::new(e.span(), "Failed to parse table name"))?;
+            .map_err(|e| syn::Error::new(e.span(), "Failed to parse table's dbms"))?;
         input.parse::<Token![,]>()?;
 
         let database_name: LitStr = input
             .parse()
-            .map_err(|e| syn::Error::new(e.span(), "Failed to parse table name"))?;
+            .map_err(|e| syn::Error::new(e.span(), "Failed to parse database name"))?;
         input.parse::<Token![,]>()?;
 
         let table_name: Ident = input
@@ -154,9 +154,16 @@ impl Parse for RemoteClickhouseTableParse {
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table name"))?;
         input.parse::<Token![,]>()?;
 
-        let data_type = input
-            .parse()
-            .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
+        let data_type = if input.peek(syn::Ident) {
+            input
+                .parse()
+                .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?
+        } else {
+            Ident::new(
+                "::db_interfaces::clickhouse::types::NoneType",
+                table_name.span(),
+            )
+        };
 
         let mut other_tables_needed = Vec::new();
         let mut table_path = None;

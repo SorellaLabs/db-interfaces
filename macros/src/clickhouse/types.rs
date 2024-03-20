@@ -4,7 +4,7 @@ use syn::LitStr;
 
 use super::{table::ClickhouseTableParse, utils::find_file_path};
 
-pub(crate) enum ClickhouseTableType {
+pub(crate) enum ClickhouseTableKind {
     Distributed,
     Remote,
     ReplicatedMergeTree,
@@ -14,77 +14,77 @@ pub(crate) enum ClickhouseTableType {
     Null,
 }
 
-impl ClickhouseTableType {
+impl ClickhouseTableKind {
     pub(crate) fn get_table_type(file_path: &str) -> Self {
         let file_str = std::fs::read_to_string(file_path)
             .unwrap_or_else(|_| panic!("Failed to read {}", file_path));
-        if file_str.contains(&ClickhouseTableType::Distributed.to_string()) {
-            ClickhouseTableType::Distributed
-        } else if file_str.contains(&ClickhouseTableType::Remote.to_string()) {
-            ClickhouseTableType::Remote
-        } else if file_str.contains(&ClickhouseTableType::ReplicatedMergeTree.to_string()) {
-            ClickhouseTableType::ReplicatedMergeTree
+        if file_str.contains(&ClickhouseTableKind::Distributed.to_string()) {
+            ClickhouseTableKind::Distributed
+        } else if file_str.contains(&ClickhouseTableKind::Remote.to_string()) {
+            ClickhouseTableKind::Remote
+        } else if file_str.contains(&ClickhouseTableKind::ReplicatedMergeTree.to_string()) {
+            ClickhouseTableKind::ReplicatedMergeTree
         } else if file_str
-            .contains(&ClickhouseTableType::ReplicatedAggregatingMergeTree.to_string())
+            .contains(&ClickhouseTableKind::ReplicatedAggregatingMergeTree.to_string())
         {
-            ClickhouseTableType::ReplicatedAggregatingMergeTree
-        } else if file_str.contains(&ClickhouseTableType::ReplicatedReplacingMergeTree.to_string())
+            ClickhouseTableKind::ReplicatedAggregatingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::ReplicatedReplacingMergeTree.to_string())
         {
-            ClickhouseTableType::ReplicatedReplacingMergeTree
-        } else if file_str.contains(&ClickhouseTableType::MaterializedView.to_string()) {
-            ClickhouseTableType::MaterializedView
-        } else if file_str.contains(&ClickhouseTableType::Null.to_string()) {
-            ClickhouseTableType::Null
+            ClickhouseTableKind::ReplicatedReplacingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::MaterializedView.to_string()) {
+            ClickhouseTableKind::MaterializedView
+        } else if file_str.contains(&ClickhouseTableKind::Null.to_string()) {
+            ClickhouseTableKind::Null
         } else {
             panic!("None of the table engines match!")
         }
     }
 }
 
-impl ToString for ClickhouseTableType {
+impl ToString for ClickhouseTableKind {
     fn to_string(&self) -> String {
         let val: &'static str = self.into();
         val.to_string()
     }
 }
 
-impl From<&ClickhouseTableType> for &'static str {
-    fn from(val: &ClickhouseTableType) -> Self {
+impl From<&ClickhouseTableKind> for &'static str {
+    fn from(val: &ClickhouseTableKind) -> Self {
         match val {
-            ClickhouseTableType::Distributed => "Distributed",
-            ClickhouseTableType::Remote => "remoteSecure",
-            ClickhouseTableType::ReplicatedMergeTree => "ReplicatedMergeTree",
-            ClickhouseTableType::ReplicatedAggregatingMergeTree => "ReplicatedAggregatingMergeTree",
-            ClickhouseTableType::ReplicatedReplacingMergeTree => "ReplicatedReplacingMergeTree",
-            ClickhouseTableType::MaterializedView => "CREATE MATERIALIZED VIEW",
-            ClickhouseTableType::Null => "Null",
+            ClickhouseTableKind::Distributed => "Distributed",
+            ClickhouseTableKind::Remote => "remoteSecure",
+            ClickhouseTableKind::ReplicatedMergeTree => "ReplicatedMergeTree",
+            ClickhouseTableKind::ReplicatedAggregatingMergeTree => "ReplicatedAggregatingMergeTree",
+            ClickhouseTableKind::ReplicatedReplacingMergeTree => "ReplicatedReplacingMergeTree",
+            ClickhouseTableKind::MaterializedView => "CREATE MATERIALIZED VIEW",
+            ClickhouseTableKind::Null => "Null",
         }
     }
 }
 
-impl From<ClickhouseTableType> for TokenStream {
-    fn from(val: ClickhouseTableType) -> Self {
+impl From<ClickhouseTableKind> for TokenStream {
+    fn from(val: ClickhouseTableKind) -> Self {
         match val {
-            ClickhouseTableType::Distributed => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed }
+            ClickhouseTableKind::Distributed => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::Distributed }
             }
-            ClickhouseTableType::Remote => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::Remote }
+            ClickhouseTableKind::Remote => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::Remote }
             }
-            ClickhouseTableType::ReplicatedMergeTree => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::ReplicatedMergeTree }
+            ClickhouseTableKind::ReplicatedMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedMergeTree }
             }
-            ClickhouseTableType::ReplicatedAggregatingMergeTree => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::ReplicatedAggregatingMergeTree }
+            ClickhouseTableKind::ReplicatedAggregatingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedAggregatingMergeTree }
             }
-            ClickhouseTableType::ReplicatedReplacingMergeTree => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::ReplicatedReplacingMergeTree }
+            ClickhouseTableKind::ReplicatedReplacingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedReplacingMergeTree }
             }
-            ClickhouseTableType::MaterializedView => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::MaterializedView }
+            ClickhouseTableKind::MaterializedView => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::MaterializedView }
             }
-            ClickhouseTableType::Null => {
-                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableType::Null }
+            ClickhouseTableKind::Null => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::Null }
             }
         }
     }
@@ -111,8 +111,8 @@ impl TableMeta {
         let file_path_str = find_file_path(&sql_file_name, &parsed.database_name, table_path);
         let file_path = LitStr::new(&file_path_str, parsed.table_name.span());
 
-        let table_type = ClickhouseTableType::get_table_type(&file_path_str);
-        if matches!(table_type, ClickhouseTableType::Remote) {
+        let table_type = ClickhouseTableKind::get_table_type(&file_path_str);
+        if matches!(table_type, ClickhouseTableKind::Remote) {
             sql_file_name.push_str("_remote");
         }
 

@@ -5,7 +5,7 @@ use super::{
 use crate::{database_table, tables::*, Database};
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
-pub enum ClickhouseTableType {
+pub enum ClickhouseTableKind {
     Distributed,
     Remote,
     ReplicatedMergeTree,
@@ -26,7 +26,7 @@ where
     const TABLE_NAME: &'static str;
     const FILE_PATH: &'static str;
     const CHILD_TABLES: &'static [D];
-    const TABLE_TYPE: ClickhouseTableType;
+    const TABLE_TYPE: ClickhouseTableKind;
     const TABLE_ENUM: D;
     type ClickhouseDataType: ClickhouseInsert;
 
@@ -53,7 +53,7 @@ where
         create_sql = replace_test_str(create_sql);
 
         let table_type = Self::TABLE_TYPE;
-        if matches!(table_type, ClickhouseTableType::Distributed) {
+        if matches!(table_type, ClickhouseTableKind::Distributed) {
             database.execute_remote(&create_sql, &()).await?;
         } else {
             create_sql = create_sql.replace(
@@ -197,7 +197,7 @@ where
 //                     assert_eq!($struct_name::TABLE_NAME, $table_name);
 //                     assert_eq!($struct_name::FILE_PATH, clickhouse_table_dir);
 //                     assert_eq!($struct_name::CHILD_TABLES, [$(ClickhouseTables::$child_tables),*]);
-//                     assert_eq!($struct_name::TABLE_TYPE, ClickhouseTableType::$table_type);
+//                     assert_eq!($struct_name::TABLE_TYPE, ClickhouseTableKind::$table_type);
 //                     assert_eq!($struct_name::TABLE_ENUM, ClickhouseTables::$table_enum);
 //                 }
 //             }
