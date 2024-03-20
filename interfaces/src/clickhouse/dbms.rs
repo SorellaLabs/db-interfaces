@@ -56,36 +56,36 @@ macro_rules! clickhouse_dbms {
              fn dependant_tables(&self) -> &[Self] {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::CHILD_TABLES
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::CHILD_TABLES
                     })*
                 }
             }
 
-             async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+             async fn create_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_table(database).await?
-                    })*
-                }
-
-                Ok(())
-            }
-
-
-             async fn create_test_table(&self, database: &ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
-                match self {
-                    $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_test_table(database, random_seed).await?
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_table(database).await?
                     })*
                 }
 
                 Ok(())
             }
 
-            async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+
+             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::drop_test_db(database).await?
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_test_table(database, random_seed).await?
+                    })*
+                }
+
+                Ok(())
+            }
+
+            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::db::ClickhouseClient<Self>) -> Result<(), ::::db_interfaces::clickhouse::errors::ClickhouseError> {
+                match self {
+                    $($dbms::$table => {
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::drop_test_db(database).await?
                     })*
                 }
 
@@ -95,7 +95,7 @@ macro_rules! clickhouse_dbms {
             fn db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::database_name()
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::database_name()
                     })*
                 }
             }
@@ -103,7 +103,7 @@ macro_rules! clickhouse_dbms {
             fn full_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::full_name()
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::full_name()
                     })*
                 }
             }
@@ -111,7 +111,7 @@ macro_rules! clickhouse_dbms {
             fn test_db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::test_database_name()
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::test_database_name()
                     })*
                 }
             }
@@ -122,7 +122,7 @@ macro_rules! clickhouse_dbms {
 
             fn from_database_table_str(value: &str) -> Self {
                 match value {
-                    $(<$table as db_interfaces::tables::DatabaseTable>::NAME => {
+                    $(<$table as ::db_interfaces::tables::DatabaseTable>::NAME => {
                         $dbms::$table
                     })*
                     _ => panic!("From str: {value} is not part of ClickhouseTables")
