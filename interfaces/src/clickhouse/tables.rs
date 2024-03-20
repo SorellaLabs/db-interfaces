@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{database_table, tables::*, Database};
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub enum ClickhouseTableType {
     Distributed,
     Remote,
@@ -13,6 +13,8 @@ pub enum ClickhouseTableType {
     ReplicatedReplacingMergeTree,
     MaterializedView,
     Null,
+    #[default]
+    None,
 }
 
 #[async_trait::async_trait]
