@@ -49,7 +49,7 @@ impl RemoteClickhouseTableParse {
                 (
                     table_name_lowercase,
                     table_name.clone(),
-                    quote!(ClickhouseTableType::None),
+                    quote!(db_interfaces::clickhouse::tables::ClickhouseTableType::None),
                     quote!(""),
                     quote!(&[]),
                 )
@@ -106,7 +106,7 @@ impl RemoteClickhouseTableParse {
                         create_sql = create_sql.replace(&format!("'{db}'"), &format!("'test_{db}'"));
 
                         let table_type = Self::TABLE_TYPE;
-                        if matches!(table_type, ClickhouseTableType::Distributed) {
+                        if matches!(table_type, db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed) {
                             database.execute_remote(&create_sql, &()).await?;
                         } else {
                             create_sql = create_sql.replace(&format!("/{}", Self::TABLE_NAME), &format!("/test{}/{}", random_seed, Self::TABLE_NAME));
@@ -128,7 +128,7 @@ impl RemoteClickhouseTableParse {
                 const TABLE_NAME: &'static str = #table_name_lowercase;
                 const FILE_PATH: &'static str = #file_path;
                 const CHILD_TABLES: &'static [#dbms] = #other_tables_needed;
-                const TABLE_TYPE: ClickhouseTableType = #table_type;
+                const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableType = #table_type;
                 const TABLE_ENUM: #dbms = #dbms::#enum_name;
                 type ClickhouseDataType = #data_type;
 
