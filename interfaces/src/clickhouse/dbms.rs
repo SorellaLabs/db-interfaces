@@ -1,4 +1,4 @@
-use super::db::ClickhouseClient;
+use super::client::ClickhouseClient;
 use crate::clickhouse::errors::ClickhouseError;
 
 #[async_trait::async_trait]

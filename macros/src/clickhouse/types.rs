@@ -44,6 +44,7 @@ impl ClickhouseTableKind {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for ClickhouseTableKind {
     fn to_string(&self) -> String {
         let val: &'static str = self.into();

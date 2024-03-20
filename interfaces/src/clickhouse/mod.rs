@@ -1,5 +1,5 @@
+pub mod client;
 pub mod config;
-pub mod db;
 pub mod dbms;
 pub mod errors;
 pub mod serde_utils;

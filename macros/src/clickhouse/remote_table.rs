@@ -12,7 +12,7 @@ pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<
     Ok(token_stream)
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub(crate) struct RemoteClickhouseTableParse {
     pub(crate) table_path: Option<LitStr>,
     pub(crate) dbms: Ident,
@@ -53,33 +53,6 @@ impl RemoteClickhouseTableParse {
             file_path.into_token_stream(),
             quote!(&[#(#dbms::#other_tables_needed),*]),
         );
-        // if table_path.is_none() {
-        //     let table_name_str = table_name.clone().to_string().replace("Clickhouse", "");
-        //     let table_name_lowercase =
-        //         add_underscore_and_lower(&table_name_str.replace("Local", "")).to_lowercase();
-
-        //     (
-        //         table_name_lowercase,
-        //         table_name.clone(),
-        //         quote!(::db_interfaces::clickhouse::tables::ClickhouseTableKind::None),
-        //         quote!(""),
-        //         quote!(&[]),
-        //     )
-        // } else {
-        //     let TableMeta {
-        //         table_name_lowercase,
-        //         enum_name,
-        //         table_type,
-        //         file_path,
-        //     } = TableMeta::new(this.into(), table_path.as_ref())?;
-        //     (
-        //         table_name_lowercase,
-        //         enum_name,
-        //         table_type,
-        //         file_path.into_token_stream(),
-        //         quote!(&[#(#dbms::#other_tables_needed),*]),
-        //     )
-        // };
 
         let no_file_impls = if table_path.is_none() {
             quote! {
@@ -143,8 +116,6 @@ impl RemoteClickhouseTableParse {
             ::db_interfaces::database_table!(#table_name, #data_type);
         };
 
-        // panic!("TABLE NAME: {:?} -- TABLE TYPE: {:?}", table_name, table_type);
-
         Ok(val)
     }
 }
@@ -202,18 +173,6 @@ impl Parse for RemoteClickhouseTableParse {
                 "There should be no values after the call function",
             ));
         }
-
-        // panic!(
-        //     "{:?}",
-        //     Self {
-        //         table_path,
-        //         dbms,
-        //         table_name: table_name.clone(),
-        //         data_type,
-        //         database_name,
-        //         other_tables_needed,
-        //     }
-        // );
 
         Ok(Self {
             table_path,

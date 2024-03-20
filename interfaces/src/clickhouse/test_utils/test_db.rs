@@ -6,7 +6,8 @@ use rand::Rng;
 
 use crate::{
     clickhouse::{
-        db::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery,
+        client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError,
+        types::ClickhouseQuery,
     },
     params::BindParameters,
     test_utils::TestDatabase,
