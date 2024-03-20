@@ -59,7 +59,7 @@ macro_rules! database_table {
         #[derive(Debug, Clone, Default)]
         pub struct $table_name;
 
-        impl DatabaseTable for $table_name {
+        impl db_interfaces::DatabaseTable for $table_name {
             type DataType = usize;
 
             const NAME: &'static str = stringify!($table_name);
