@@ -13,7 +13,7 @@ pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<
     Ok(token_stream)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct RemoteClickhouseTableParse {
     pub(crate) table_path: Option<LitStr>,
     pub(crate) dbms: Ident,
@@ -190,6 +190,18 @@ impl Parse for RemoteClickhouseTableParse {
                 "There should be no values after the call function",
             ));
         }
+
+        panic!(
+            "{:?}",
+            Self {
+                table_path,
+                dbms,
+                table_name: table_name.clone(),
+                data_type,
+                database_name,
+                other_tables_needed,
+            }
+        );
 
         Ok(Self {
             table_path,
