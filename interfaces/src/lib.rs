@@ -3,16 +3,18 @@
 pub mod clickhouse;
 pub mod errors;
 pub mod params;
+
 pub mod tables;
 
 //#[cfg(feature = "test-utils")]
 pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
+
 pub use db_interfaces_macros::remote_clickhouse_table;
 use errors::DatabaseError;
 use params::BindParameters;
-use tables::DatabaseTable;
+use tables::*;
 
 #[async_trait::async_trait]
 pub trait Database: Sync + Send {
