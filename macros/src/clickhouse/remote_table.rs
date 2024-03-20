@@ -124,7 +124,7 @@ impl RemoteClickhouseTableParse {
         let val = quote! {
 
             #[async_trait::async_trait]
-            impl ClickhouseTable<#dbms> for #table_name {
+            impl db_interfaces::clickhouse::tables::ClickhouseTable<#dbms> for #table_name {
                 const DATABASE_NAME: &'static str = #database_name;
                 const TABLE_NAME: &'static str = #table_name_lowercase;
                 const FILE_PATH: &'static str = #file_path;
