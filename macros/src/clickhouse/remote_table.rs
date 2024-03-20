@@ -154,14 +154,12 @@ impl Parse for RemoteClickhouseTableParse {
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table name"))?;
 
         let data_type = if input.peek2(syn::Ident) {
-            panic!("SHOULD NOT BE IT");
-            input.parse::<Token![,]>()?;
             let dt_expr: Expr = input
                 .parse()
                 .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
             quote!(#dt_expr)
         } else {
-            quote!(::db_interfaces::clickhouse::types::NoneType)
+            quote!(db_interfaces::clickhouse::types::NoneType)
         };
 
         let mut other_tables_needed = Vec::new();
