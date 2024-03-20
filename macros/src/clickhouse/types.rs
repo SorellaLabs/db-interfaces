@@ -23,6 +23,8 @@ impl ClickhouseTableKind {
             ClickhouseTableKind::Distributed
         } else if file_str.contains(&ClickhouseTableKind::Remote.to_string()) {
             ClickhouseTableKind::Remote
+        } else if file_str.contains(&ClickhouseTableKind::RemoteSecure.to_string()) {
+            ClickhouseTableKind::RemoteSecure
         } else if file_str.contains(&ClickhouseTableKind::ReplicatedMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedMergeTree
         } else if file_str
@@ -117,7 +119,9 @@ impl TableMeta {
         let file_path = LitStr::new(&file_path_str, parsed.table_name.span());
 
         let table_type = ClickhouseTableKind::get_table_type(&file_path_str);
-        if matches!(table_type, ClickhouseTableKind::Remote) {
+        if matches!(table_type, ClickhouseTableKind::Remote)
+            || matches!(table_type, ClickhouseTableKind::RemoteSecure)
+        {
             sql_file_name.push_str("_remote");
         }
 
