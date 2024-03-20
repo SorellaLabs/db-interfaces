@@ -84,7 +84,7 @@ impl RemoteClickhouseTableParse {
                     async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
                         let table_sql_path = Self::FILE_PATH;
                         let create_sql = std::fs::read_to_string(table_sql_path)?;
-                        db_interfaces::Database::execute_remote(&database, &create_sql, &()).await?;
+                        db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
 
                         Ok(())
                     }
@@ -99,11 +99,11 @@ impl RemoteClickhouseTableParse {
 
                         let table_type = Self::TABLE_TYPE;
                         match table_type {
-                            db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => db_interfaces::Database::execute_remote(&database, &create_sql, &()).await?,
+                            db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
                                 create_sql = create_sql.replace(&format!("/{}", Self::TABLE_NAME), &format!("/test{}/{}", random_seed, Self::TABLE_NAME));
 
-                                db_interfaces::Database::execute_remote(&database, &create_sql, &()).await?;
+                                db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
                             }
                         }
 
