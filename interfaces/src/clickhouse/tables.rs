@@ -2,7 +2,7 @@ use super::{
     db::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseInsert,
     utils::*,
 };
-use crate::{database_table, tables::*, Database};
+use crate::Database;
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub enum ClickhouseTableKind {
@@ -51,7 +51,7 @@ where
     ) -> Result<(), ClickhouseError> {
         let table_sql_path = Self::FILE_PATH;
         let mut create_sql = std::fs::read_to_string(table_sql_path)?;
-        create_sql = replace_test_str(create_sql);
+        create_sql = Self::replace_test_str(create_sql);
 
         let table_type = Self::TABLE_TYPE;
         if matches!(table_type, ClickhouseTableKind::Distributed) {
@@ -101,6 +101,28 @@ where
 
     fn full_test_name() -> String {
         format!("test_{}.{}", Self::DATABASE_NAME, Self::TABLE_NAME)
+    }
+
+    fn replace_test_str(str: String) -> String {
+        let mut str = str.replace("local_tables.", "test_local_tables.");
+        str = str.replace("'local_tables'", "'test_local_tables'");
+
+        str = str.replace("views.", "test_views.");
+        str = str.replace("'views'", "'test_views'");
+
+        str = str.replace("cex.", "test_cex.");
+        str = str.replace("'cex'", "'test_cex'");
+
+        str = str.replace("mev.", "test_mev.");
+        str = str.replace("'mev'", "'test_mev'");
+
+        str = str.replace("ethereum.", "test_ethereum.");
+        str = str.replace("'ethereum'", "'test_ethereum'");
+
+        str = str.replace("eth_analytics.", "test_eth_analytics.");
+        str = str.replace("'eth_analytics'", "'test_eth_analytics'");
+
+        str
     }
 }
 
