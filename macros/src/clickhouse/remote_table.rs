@@ -4,7 +4,6 @@ use quote::{quote, ToTokens};
 use syn::{parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token};
 
 use super::{table::ClickhouseTableParse, types::TableMeta};
-use crate::clickhouse::types::add_underscore_and_lower;
 
 pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<TokenStream> {
     let parsed: RemoteClickhouseTableParse = syn::parse2(token_stream)?;

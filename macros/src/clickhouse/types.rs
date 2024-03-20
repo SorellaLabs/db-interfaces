@@ -21,10 +21,10 @@ impl ClickhouseTableKind {
             .unwrap_or_else(|_| panic!("Failed to read {}", file_path));
         if file_str.contains(&ClickhouseTableKind::Distributed.to_string()) {
             ClickhouseTableKind::Distributed
-        } else if file_str.contains(&ClickhouseTableKind::Remote.to_string()) {
-            ClickhouseTableKind::Remote
         } else if file_str.contains(&ClickhouseTableKind::RemoteSecure.to_string()) {
             ClickhouseTableKind::RemoteSecure
+        } else if file_str.contains(&ClickhouseTableKind::Remote.to_string()) {
+            ClickhouseTableKind::Remote
         } else if file_str.contains(&ClickhouseTableKind::ReplicatedMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedMergeTree
         } else if file_str
