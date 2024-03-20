@@ -82,7 +82,7 @@ impl RemoteClickhouseTableParse {
         } else {
             quote! {
                     async fn create_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
-                        let table_sql_path = Self::FILE_PATH;
+                        let table_sql_path = <Self as db_interfaces::tables::DatabaseTable>::FILE_PATH;
                         let create_sql = std::fs::read_to_string(table_sql_path)?;
                         db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
 
@@ -90,18 +90,18 @@ impl RemoteClickhouseTableParse {
                     }
 
                     async fn create_test_table(database: &db_interfaces::clickhouse::db::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), db_interfaces::clickhouse::errors::ClickhouseError> {
-                        let table_sql_path = Self::FILE_PATH;
+                        let table_sql_path = <Self as db_interfaces::tables::DatabaseTable>::FILE_PATH;
                         let mut create_sql = std::fs::read_to_string(table_sql_path)?;
 
-                        let db = Self::DATABASE_NAME;
+                        let db = <Self as db_interfaces::tables::DatabaseTable>::DATABASE_NAME;
                         create_sql = create_sql.replace(&format!("{db}."), &format!("test_{db}."));
                         create_sql = create_sql.replace(&format!("'{db}'"), &format!("'test_{db}'"));
 
-                        let table_type = Self::TABLE_TYPE;
+                        let table_type = <Self as db_interfaces::tables::DatabaseTable>::TABLE_TYPE;
                         match table_type {
                             db_interfaces::clickhouse::tables::ClickhouseTableType::Distributed => db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
                             _ => {
-                                create_sql = create_sql.replace(&format!("/{}", Self::TABLE_NAME), &format!("/test{}/{}", random_seed, Self::TABLE_NAME));
+                                create_sql = create_sql.replace(&format!("/{}", <Self as db_interfaces::tables::DatabaseTable>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as db_interfaces::tables::DatabaseTable>::TABLE_NAME));
 
                                 db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
                             }
