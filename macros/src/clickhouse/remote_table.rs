@@ -167,7 +167,7 @@ impl Parse for RemoteClickhouseTableParse {
 
         let mut other_tables_needed = Vec::new();
         let mut table_path = None;
-        if input.peek(Token![,]) {
+        while input.peek(Token![,]) {
             input.parse::<Token![,]>()?;
 
             if input.peek(token::Paren) {
