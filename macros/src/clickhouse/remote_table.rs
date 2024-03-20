@@ -160,7 +160,7 @@ impl Parse for RemoteClickhouseTableParse {
                 .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
             quote!(#dt_ident)
         } else {
-            quote!(db_interfaces::clickhouse::types::NoneType)
+            quote!(NoneType)
         };
 
         let mut other_tables_needed = Vec::new();
@@ -191,17 +191,17 @@ impl Parse for RemoteClickhouseTableParse {
             ));
         }
 
-        panic!(
-            "{:?}",
-            Self {
-                table_path,
-                dbms,
-                table_name: table_name.clone(),
-                data_type,
-                database_name,
-                other_tables_needed,
-            }
-        );
+        // panic!(
+        //     "{:?}",
+        //     Self {
+        //         table_path,
+        //         dbms,
+        //         table_name: table_name.clone(),
+        //         data_type,
+        //         database_name,
+        //         other_tables_needed,
+        //     }
+        // );
 
         Ok(Self {
             table_path,
