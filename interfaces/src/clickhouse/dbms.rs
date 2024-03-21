@@ -29,6 +29,26 @@ pub trait ClickhouseDBMS: Sized + Sync + Send {
     fn from_database_table_str(val: &str) -> Self;
 }
 
+/// There are 2 possible inputs, for tables (not) in a distributed setup
+///
+/// With distributed:
+/// 1. enum name for the DBMS
+/// 2. cluster name
+/// 3. set of tables
+///
+/// Example:
+/// ```
+/// clickhouse_dbms!(ExampleDBMS0, "cluster1", [Table0, Table1])
+/// ```
+///
+/// Without distributed:
+/// 1. enum name for the DBMS
+/// 3. set of tables
+///
+/// Example:
+/// ```
+/// clickhouse_dbms!(ExampleDBMS1, [Table0, Table1])
+/// ```
 #[macro_export]
 macro_rules! clickhouse_dbms {
     ($dbms:ident, [$($table:ident),*]) => {

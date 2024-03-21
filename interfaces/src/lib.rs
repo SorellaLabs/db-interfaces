@@ -46,17 +46,17 @@ pub trait Database: Sync + Send {
         params: &P,
     ) -> Result<Vec<Q>, Self::Error>;
 
-    async fn execute_remote<P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<(), Self::Error>;
-
     async fn query_raw<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
     ) -> Result<Vec<u8>, Self::Error>;
+
+    async fn execute_remote<P: BindParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P,
+    ) -> Result<(), Self::Error>;
 }
 
 pub trait DatabaseQuery: ClickhouseQuery {}
