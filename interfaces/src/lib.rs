@@ -6,7 +6,7 @@ pub mod params;
 
 pub mod tables;
 
-//#[cfg(feature = "test-utils")]
+#[cfg(feature = "test-utils")]
 pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;

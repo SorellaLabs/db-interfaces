@@ -2,12 +2,20 @@ use std::{env, fs, io, io::BufRead, path};
 
 use syn::LitStr;
 
-pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: Option<&LitStr>) -> String {
+pub(crate) fn find_file_path(
+    table_name: &str,
+    database_name: &str,
+    table_path: Option<&LitStr>,
+) -> String {
     dotenv::dotenv().ok();
     let root_path = workspace_dir();
     let path = root_path.to_str().unwrap();
 
-    let clickhouse_table_dir = if let Some(tp) = table_path { format!("{path}/{}", tp.value()) } else { format!("{path}/clickhouse/eth_cluster0/") };
+    let clickhouse_table_dir = if let Some(tp) = table_path {
+        format!("{path}/{}", tp.value())
+    } else {
+        format!("{path}/clickhouse/eth_cluster0/")
+    };
 
     let mut pathsss = Vec::new();
     if let Ok(entries) = visit_dirs(path::Path::new(&clickhouse_table_dir)) {
@@ -19,10 +27,14 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
                     if (ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()))
-                        || ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase())))
+                        || ln.contains(&format!(
+                            "{}.{}_remote ",
+                            database_name,
+                            table_name.to_lowercase()
+                        )))
                         && ln.contains("CREATE")
                     {
-                        return entry.path().to_str().unwrap().to_string()
+                        return entry.path().to_str().unwrap().to_string();
                     }
                 }
             }
@@ -43,7 +55,7 @@ pub(crate) fn workspace_dir() -> path::PathBuf {
     cargo_path.parent().unwrap().to_path_buf()
 }
 
-// Recursive directory traversal
+/// Recursive directory traversal
 fn visit_dirs(dir: &path::Path) -> io::Result<Vec<fs::DirEntry>> {
     let mut entries = Vec::new();
 
@@ -62,10 +74,9 @@ fn visit_dirs(dir: &path::Path) -> io::Result<Vec<fs::DirEntry>> {
     Ok(entries)
 }
 
-// Read lines from a file
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<fs::File>>>
 where
-    P: AsRef<path::Path>
+    P: AsRef<path::Path>,
 {
     let file = fs::File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
