@@ -14,7 +14,7 @@ pub(crate) fn find_file_path(
     let clickhouse_table_dir = if let Some(tp) = table_path {
         format!("{path}/{}", tp.value())
     } else {
-        path.to_string()
+        return "".to_string();
     };
 
     let mut pathsss = Vec::new();
