@@ -23,7 +23,7 @@ extern crate proc_macro;
 /// 3 - name of the table struct (ident)
 /// 4 (optional) - the type that is used when inserting into the table
 /// 5 (optional) - a tuple of 'child tables' (i.e. tables that will be created/dropped along with the parent table)
-/// 6 the path to the directory where the sql table is defined (relative to the workspace/crate root), if not provided the testing module is disabled for the table
+/// 6 (optional) the path to the directory where the sql table is defined (relative to the workspace/crate root), if not provided the testing module is disabled for the table
 ///
 /// Examples:
 /// ```
