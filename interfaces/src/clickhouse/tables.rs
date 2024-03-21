@@ -18,6 +18,7 @@ pub enum ClickhouseTableKind {
     None,
 }
 
+/// trait for different implementations of clickhouse tables
 #[async_trait::async_trait]
 pub trait ClickhouseTable<D>: Send + Sync
 where
@@ -87,20 +88,24 @@ where
         Ok(())
     }
 
+    /// name of the database
     fn database_name() -> String {
         Self::DATABASE_NAME.to_string()
     }
 
+    /// name of the test database
     fn test_database_name() -> String {
         format!("test_{}", Self::DATABASE_NAME)
     }
 
+    /// full name <DATABASE NAME>.<TABLE NAME>
     fn full_name() -> String {
         format!("{}.{}", Self::DATABASE_NAME, Self::TABLE_NAME)
     }
 
+    /// full name <TEST DATABASE NAME>.<TABLE NAME>
     fn full_test_name() -> String {
-        format!("test_{}.{}", Self::DATABASE_NAME, Self::TABLE_NAME)
+        format!("{}.{}", Self::test_database_name(), Self::TABLE_NAME)
     }
 
     fn replace_test_str(str: String) -> String {
