@@ -1,7 +1,5 @@
 use std::fmt::{Debug, Display};
 
-use crate::clickhouse::errors::ClickhouseError;
-
 #[derive(Debug)]
 pub struct DatabaseError {
     pub error: Box<dyn std::error::Error>,
