@@ -1,5 +1,5 @@
 use super::client::ClickhouseClient;
-use crate::clickhouse::errors::ClickhouseError;
+use crate::errors::DatabaseError;
 
 #[async_trait::async_trait]
 pub trait ClickhouseDBMS: Sized + Sync + Send {
@@ -7,15 +7,15 @@ pub trait ClickhouseDBMS: Sized + Sync + Send {
 
     fn dependant_tables(&self) -> &[Self];
 
-    async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), ClickhouseError>;
+    async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>;
 
     async fn create_test_table(
         &self,
         database: &ClickhouseClient<Self>,
         random_seed: u32,
-    ) -> Result<(), ClickhouseError>;
+    ) -> Result<(), DatabaseError>;
 
-    async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), ClickhouseError>;
+    async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>;
 
     fn all_tables() -> Vec<Self>;
 
@@ -78,7 +78,7 @@ macro_rules! clickhouse_dbms {
                 }
             }
 
-             async fn create_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+             async fn create_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_table(database).await?
@@ -89,7 +89,7 @@ macro_rules! clickhouse_dbms {
             }
 
 
-             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::db_interfaces::errors::DatabaseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_test_table(database, random_seed).await?
@@ -99,7 +99,7 @@ macro_rules! clickhouse_dbms {
                 Ok(())
             }
 
-            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::clickhouse::errors::ClickhouseError> {
+            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
                 match self {
                     $($dbms::$table => {
                         <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::drop_test_db(database).await?

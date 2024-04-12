@@ -1,7 +1,6 @@
-use super::{
-    client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError,
-    types::ClickhouseInsert,
-};
+use super::errors::ClickhouseError;
+use super::{client::ClickhouseClient, dbms::ClickhouseDBMS, types::ClickhouseInsert};
+use crate::errors::DatabaseError;
 use crate::Database;
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
@@ -33,9 +32,10 @@ where
     type ClickhouseDataType: ClickhouseInsert;
 
     /// creates the table and associated tables
-    async fn create_table(database: &ClickhouseClient<D>) -> Result<(), ClickhouseError> {
+    async fn create_table(database: &ClickhouseClient<D>) -> Result<(), DatabaseError> {
         let table_sql_path = Self::FILE_PATH;
-        let create_sql = std::fs::read_to_string(table_sql_path)?;
+        let create_sql = std::fs::read_to_string(table_sql_path)
+            .map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
         database.execute_remote(&create_sql, &()).await?;
 
         for table in Self::CHILD_TABLES {
@@ -49,9 +49,10 @@ where
     async fn create_test_table(
         database: &ClickhouseClient<D>,
         random_seed: u32,
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let table_sql_path = Self::FILE_PATH;
-        let mut create_sql = std::fs::read_to_string(table_sql_path)?;
+        let mut create_sql = std::fs::read_to_string(table_sql_path)
+            .map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
         create_sql = Self::replace_test_str(create_sql);
 
         let table_type = Self::TABLE_TYPE;
@@ -74,7 +75,7 @@ where
     }
 
     /// FOR TESTING: truncates the test table and associated test tables
-    async fn drop_test_db(database: &ClickhouseClient<D>) -> Result<(), ClickhouseError> {
+    async fn drop_test_db(database: &ClickhouseClient<D>) -> Result<(), DatabaseError> {
         let drop_on_cluster = D::CLUSTER
             .map(|s| format!("ON CLUSTER {s}"))
             .unwrap_or_default();

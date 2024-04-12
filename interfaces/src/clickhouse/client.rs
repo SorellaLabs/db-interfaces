@@ -7,7 +7,7 @@ use hyper_tls::HttpsConnector;
 use super::{
     config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery,
 };
-use crate::{params::BindParameters, Database, DatabaseTable};
+use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]
 pub struct ClickhouseClient<D> {
@@ -89,26 +89,22 @@ where
     D: ClickhouseDBMS,
 {
     type DBMS = D;
-    type Error = ClickhouseError;
 
-    async fn insert_one<T: DatabaseTable>(
-        &self,
-        value: &T::DataType,
-    ) -> Result<(), ClickhouseError> {
+    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
             .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         insert
             .write(value)
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         insert
             .end()
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         Ok(())
     }
@@ -116,23 +112,23 @@ where
     async fn insert_many<T: DatabaseTable>(
         &self,
         values: &[T::DataType],
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
             .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         for value in values {
             insert
                 .write(value)
                 .await
-                .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+                .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
         }
 
         insert
             .end()
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         Ok(())
     }
@@ -141,13 +137,13 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Q, ClickhouseError> {
+    ) -> Result<Q, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
             .fetch_one::<Q>()
             .await
-            .map_err(|e| ClickhouseError::QueryError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
 
         Ok(res)
     }
@@ -156,13 +152,13 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Option<Q>, ClickhouseError> {
+    ) -> Result<Option<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
             .fetch_optional::<Q>()
             .await
-            .map_err(|e| ClickhouseError::QueryError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
 
         Ok(res)
     }
@@ -171,13 +167,13 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<Q>, ClickhouseError> {
+    ) -> Result<Vec<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
             .fetch_all::<Q>()
             .await
-            .map_err(|e| ClickhouseError::QueryError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
 
         Ok(res)
     }
@@ -186,25 +182,25 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<u8>, ClickhouseError> {
+    ) -> Result<Vec<u8>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
         query
             .fetch_raw::<Q>()
             .await
-            .map_err(|e| ClickhouseError::QueryError(e.to_string()))
+            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))
     }
 
     async fn execute_remote<P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         query
             .execute()
             .await
-            .map_err(|e| ClickhouseError::QueryError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
 
         Ok(())
     }

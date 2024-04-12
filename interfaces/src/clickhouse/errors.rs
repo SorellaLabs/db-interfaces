@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use thiserror::Error;
 
-use crate::errors::{DatabaseError, MapError};
+use crate::errors::DatabaseError;
 
 #[derive(Error, Debug, Clone)]
 pub enum ClickhouseError {
@@ -24,12 +24,10 @@ impl From<std::io::Error> for ClickhouseError {
     }
 }
 
-impl Into<DatabaseError> for ClickhouseError {
-    fn into(self) -> DatabaseError {
+impl From<ClickhouseError> for DatabaseError {
+    fn from(value: ClickhouseError) -> DatabaseError {
         DatabaseError {
-            error: Box::new(self),
+            error: value.to_string(),
         }
     }
 }
-
-impl MapError for ClickhouseError {}

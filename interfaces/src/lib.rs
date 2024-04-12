@@ -11,51 +11,50 @@ pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
 pub use db_interfaces_macros::remote_clickhouse_table;
-use errors::MapError;
+use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;
 
 #[async_trait::async_trait]
 pub trait Database: Sync + Send {
-    type Error: MapError;
     type DBMS;
 
-    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), Self::Error>;
+    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError>;
 
     async fn insert_many<T: DatabaseTable>(
         &self,
         values: &[T::DataType],
-    ) -> Result<(), Self::Error>;
+    ) -> Result<(), DatabaseError>;
 
     async fn query_one<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Q, Self::Error>;
+    ) -> Result<Q, DatabaseError>;
 
     async fn query_one_optional<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Option<Q>, Self::Error>;
+    ) -> Result<Option<Q>, DatabaseError>;
 
     async fn query_many<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<Q>, Self::Error>;
+    ) -> Result<Vec<Q>, DatabaseError>;
 
     async fn query_raw<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<u8>, Self::Error>;
+    ) -> Result<Vec<u8>, DatabaseError>;
 
     async fn execute_remote<P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<(), Self::Error>;
+    ) -> Result<(), DatabaseError>;
 }
 
 pub trait DatabaseQuery: ClickhouseQuery {}

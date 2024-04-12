@@ -4,6 +4,7 @@ use eyre::Result;
 use futures::{future::join_all, Future};
 use rand::Rng;
 
+use crate::errors::DatabaseError;
 use crate::{
     clickhouse::{
         client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError,
@@ -34,7 +35,7 @@ impl<D> ClickhouseTestingClient<D>
 where
     D: ClickhouseDBMS,
 {
-    pub async fn setup(&self, tables: Option<&[D]>) -> Result<(), ClickhouseError> {
+    pub async fn setup(&self, tables: Option<&[D]>) -> Result<(), DatabaseError> {
         self.setup_cleanup(tables, false).await?; // drops all dbs if necessary
         self.setup_cleanup(tables, true).await?; // drops all dbs
 
@@ -54,7 +55,7 @@ where
         &self,
         tables: Option<&[D]>,
         create: bool,
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let cmd = if create {
             "CREATE DATABASE IF NOT EXISTS"
         } else {
@@ -91,12 +92,8 @@ where
     D: ClickhouseDBMS,
 {
     type DBMS = D;
-    type Error = ClickhouseError;
 
-    async fn insert_one<T: DatabaseTable>(
-        &self,
-        value: &T::DataType,
-    ) -> Result<(), ClickhouseError> {
+    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let table = format!(
             "test_{}",
             Self::DBMS::from_database_table_str(T::NAME).full_name()
@@ -105,17 +102,17 @@ where
             .client
             .client
             .insert(table)
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         insert
             .write(value)
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         insert
             .end()
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         Ok(())
     }
@@ -123,7 +120,7 @@ where
     async fn insert_many<T: DatabaseTable>(
         &self,
         values: &[T::DataType],
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let table = format!(
             "test_{}",
             Self::DBMS::from_database_table_str(T::NAME).full_name()
@@ -132,19 +129,19 @@ where
             .client
             .client
             .insert(table)
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         for value in values {
             insert
                 .write(value)
                 .await
-                .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+                .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
         }
 
         insert
             .end()
             .await
-            .map_err(|e| ClickhouseError::InsertError(e.to_string()))?;
+            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
 
         Ok(())
     }
@@ -153,7 +150,7 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Q, ClickhouseError> {
+    ) -> Result<Q, DatabaseError> {
         let query: String = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one(&query, params).await
@@ -163,7 +160,7 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Option<Q>, ClickhouseError> {
+    ) -> Result<Option<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one_optional(&query, params).await
@@ -173,7 +170,7 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<Q>, ClickhouseError> {
+    ) -> Result<Vec<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_many(&query, params).await
@@ -183,7 +180,7 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<Vec<u8>, ClickhouseError> {
+    ) -> Result<Vec<u8>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
         self.client.query_raw::<Q, P>(&query, params).await
     }
@@ -192,7 +189,7 @@ where
         &self,
         query: impl AsRef<str> + Send,
         params: &P,
-    ) -> Result<(), ClickhouseError> {
+    ) -> Result<(), DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.execute_remote(&query, params).await
