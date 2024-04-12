@@ -13,8 +13,8 @@ impl Display for DatabaseError {
 
 impl std::error::Error for DatabaseError {}
 
-pub trait MapError: Into<DatabaseError> {
-    fn to_db_err(self) -> DatabaseError {
-        self.into()
+pub trait MapError: Into<DatabaseError> + Clone {
+    fn to_db_err(&self) -> DatabaseError {
+        self.clone().into()
     }
 }
