@@ -18,7 +18,7 @@ use tables::*;
 
 #[async_trait::async_trait]
 pub trait Database: Sync + Send {
-    type Error: DatabaseError;
+    type Error: Into<DatabaseError>;
     type DBMS;
 
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), Self::Error>;
