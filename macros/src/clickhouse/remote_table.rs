@@ -75,7 +75,7 @@ impl RemoteClickhouseTableParse {
 
                     async fn create_test_table(database: &::db_interfaces::clickhouse::client::ClickhouseClient<#dbms>, random_seed: u32) -> Result<(), ::db_interfaces::errors::DatabaseError> {
                         let table_sql_path = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::FILE_PATH;
-                        let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?
+                        let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
 
                         let db = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::DATABASE_NAME;
                         create_sql = create_sql.replace(&format!("{db}."), &format!("test_{db}."));
