@@ -10,15 +10,15 @@ pub mod tables;
 pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
-
 pub use db_interfaces_macros::remote_clickhouse_table;
 use errors::DatabaseError;
+use errors::MapError;
 use params::BindParameters;
 use tables::*;
 
 #[async_trait::async_trait]
 pub trait Database: Sync + Send {
-    type Error: Into<DatabaseError>;
+    type Error: MapError;
     type DBMS;
 
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), Self::Error>;

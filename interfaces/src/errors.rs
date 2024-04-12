@@ -15,10 +15,8 @@ impl Display for DatabaseError {
 
 impl std::error::Error for DatabaseError {}
 
-impl From<ClickhouseError> for DatabaseError {
-    fn from(value: ClickhouseError) -> Self {
-        DatabaseError {
-            error: Box::new(value),
-        }
+pub trait MapError: Into<DatabaseError> {
+    fn to_db_err(self) -> DatabaseError {
+        self.into()
     }
 }

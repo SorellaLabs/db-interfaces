@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use thiserror::Error;
 
+use crate::errors::{DatabaseError, MapError};
+
 #[derive(Error, Debug, Clone)]
 pub enum ClickhouseError {
     #[error("database connection error: {0}")]
@@ -21,3 +23,13 @@ impl From<std::io::Error> for ClickhouseError {
         ClickhouseError::SqlFileReadError(value.to_string())
     }
 }
+
+impl Into<DatabaseError> for ClickhouseError {
+    fn into(self) -> DatabaseError {
+        DatabaseError {
+            error: Box::new(self),
+        }
+    }
+}
+
+impl MapError for ClickhouseError {}
