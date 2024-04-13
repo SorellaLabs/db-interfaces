@@ -3,8 +3,10 @@
 pub mod clickhouse;
 pub mod errors;
 pub mod params;
-
 pub mod tables;
+
+#[cfg(feature = "alloy-types")]
+pub mod alloy_types;
 
 #[cfg(feature = "test-utils")]
 pub mod test_utils;

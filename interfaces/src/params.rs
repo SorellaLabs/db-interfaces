@@ -4,11 +4,11 @@ use std::fmt::Debug;
 use clickhouse::{query::Query, sql::Bind};
 use serde::Serialize;
 
-pub trait BindParameters: Serialize + Send + Sync + Debug {
+pub trait BindParameters: Send + Sync + Debug {
     fn bind_query(&self, query: Query) -> Query;
 }
 
-impl<T: BindParameters> BindParameters for &T {
+impl<T: BindParameters + Serialize> BindParameters for &T {
     fn bind_query(&self, query: Query) -> Query {
         query.bind(self)
     }
@@ -21,7 +21,7 @@ macro_rules! impl_bind_parameters {
         $(
             impl BindParameters for $T
             where
-                $T: Bind + Serialize,
+                Self: Bind + Serialize,
             {
                 fn bind_query(&self, query: Query) -> Query {
                     query.bind(self)
@@ -36,6 +36,8 @@ macro_rules! impl_simple_bind_parameters {
     ($($T:ty),*) => {
         $(
             impl BindParameters for $T
+            where
+                Self: Serialize
             {
                 fn bind_query(&self, query: Query) -> Query {
                     query.bind(self)
