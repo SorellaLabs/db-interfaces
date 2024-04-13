@@ -4,11 +4,11 @@ use std::fmt::Debug;
 use clickhouse::{query::Query, sql::Bind};
 use serde::Serialize;
 
-pub trait BindParameters: Send + Sync + Debug {
+pub trait BindParameters: Serialize + Send + Sync + Debug {
     fn bind_query(&self, query: Query) -> Query;
 }
 
-impl<T: BindParameters + Serialize> BindParameters for &T {
+impl<T: BindParameters> BindParameters for &T {
     fn bind_query(&self, query: Query) -> Query {
         query.bind(self)
     }
