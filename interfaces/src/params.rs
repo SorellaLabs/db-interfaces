@@ -8,6 +8,12 @@ pub trait BindParameters: Send + Sync + Debug {
     fn bind_query(&self, query: Query) -> Query;
 }
 
+impl<T: BindParameters + Serialize> BindParameters for &T {
+    fn bind_query(&self, query: Query) -> Query {
+        query.bind(self)
+    }
+}
+
 macro_rules! impl_bind_parameters {
     ($($T:ty),*) => {
         $(
@@ -46,15 +52,6 @@ macro_rules! impl_generic_bind_parameters {
 
 impl_generic_bind_parameters!(Vec<I>);
 
-impl<'a, I> BindParameters for &'a Vec<I>
-where
-    I: Bind + Serialize + Debug + Send + Sync,
-{
-    fn bind_query(&self, query: Query) -> Query {
-        query.bind(self)
-    }
-}
-
 impl<'a, I> BindParameters for &'a [I]
 where
     I: Bind + Serialize + Debug + Send + Sync,
@@ -64,7 +61,7 @@ where
     }
 }
 
-impl<'a> BindParameters for &'a str {
+impl BindParameters for str {
     fn bind_query(&self, query: Query) -> Query {
         query.bind(self)
     }
