@@ -52,6 +52,12 @@ impl_simple_bind_parameters!(i8, i16, i32, i64, i128);
 impl_simple_bind_parameters!(f32, f64);
 impl_simple_bind_parameters!(String, str);
 
+impl BindParameters for &str {
+    fn bind_query(&self, query: Query) -> Query {
+        query.bind(self)
+    }
+}
+
 /// single generic bind params
 macro_rules! impl_generic_bind_parameters {
     ($($T:ty),*) => {
