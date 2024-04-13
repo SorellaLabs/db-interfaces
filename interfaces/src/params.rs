@@ -14,6 +14,8 @@ impl<T: BindParameters> BindParameters for &T {
     }
 }
 
+#[macro_export]
+/// exported bind params
 macro_rules! impl_bind_parameters {
     ($($T:ty),*) => {
         $(
@@ -29,11 +31,26 @@ macro_rules! impl_bind_parameters {
     };
 }
 
-impl_bind_parameters!(u8, u16, u32, u64, u128);
-impl_bind_parameters!(i8, i16, i32, i64, i128);
-impl_bind_parameters!(f32, f64);
-impl_bind_parameters!(String);
+/// simple bind params
+macro_rules! impl_simple_bind_parameters {
+    ($($T:ty),*) => {
+        $(
+            impl BindParameters for $T
+            {
+                fn bind_query(&self, query: Query) -> Query {
+                    query.bind(self)
+                }
+            }
+        )*
+    };
+}
 
+impl_simple_bind_parameters!(u8, u16, u32, u64, u128);
+impl_simple_bind_parameters!(i8, i16, i32, i64, i128);
+impl_simple_bind_parameters!(f32, f64);
+impl_simple_bind_parameters!(String, str);
+
+/// single generic bind params
 macro_rules! impl_generic_bind_parameters {
     ($($T:ty),*) => {
         $(
@@ -52,14 +69,8 @@ macro_rules! impl_generic_bind_parameters {
 
 impl_generic_bind_parameters!(Vec<I>, [I]);
 
-impl BindParameters for str {
-    fn bind_query(&self, query: Query) -> Query {
-        query.bind(self)
-    }
-}
-
-/// For tuples
-macro_rules! impl_bind_parameters_for_tuples {
+/// tuple bind params
+macro_rules! impl_tuple_bind_parameters {
     ($($T:ident,)*) => {
         impl<$($T: Bind + Serialize + Debug + Send + Sync),*> BindParameters for ($($T,)*) {
             #[allow(unused_mut)]
@@ -76,14 +87,14 @@ macro_rules! impl_bind_parameters_for_tuples {
     };
 }
 
-impl_bind_parameters_for_tuples!();
-impl_bind_parameters_for_tuples!(T1,);
-impl_bind_parameters_for_tuples!(T1, T2,);
-impl_bind_parameters_for_tuples!(T1, T2, T3,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5, T6,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5, T6, T7,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5, T6, T7, T8,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9,);
-impl_bind_parameters_for_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,);
+impl_tuple_bind_parameters!();
+impl_tuple_bind_parameters!(T1,);
+impl_tuple_bind_parameters!(T1, T2,);
+impl_tuple_bind_parameters!(T1, T2, T3,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,);
