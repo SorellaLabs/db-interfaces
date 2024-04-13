@@ -50,16 +50,7 @@ macro_rules! impl_generic_bind_parameters {
     };
 }
 
-impl_generic_bind_parameters!(Vec<I>);
-
-impl<'a, I> BindParameters for &'a [I]
-where
-    I: Bind + Serialize + Debug + Send + Sync,
-{
-    fn bind_query(&self, query: Query) -> Query {
-        query.bind(self)
-    }
-}
+impl_generic_bind_parameters!(Vec<I>, [I]);
 
 impl BindParameters for str {
     fn bind_query(&self, query: Query) -> Query {
