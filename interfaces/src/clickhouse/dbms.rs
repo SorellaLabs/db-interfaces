@@ -148,3 +148,55 @@ macro_rules! clickhouse_dbms {
         }
     }
 }
+
+
+
+
+#[derive(Debug, Default, Clone)]
+pub struct NullDBMS;
+
+impl ClickhouseDBMS for NullDBMS {
+    const CLUSTER: Option<&'static str> = None;
+
+    fn dependant_tables(&self) -> &[Self] {
+        &[]
+    }
+
+    async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError> {
+        Ok(())
+    }
+
+    async fn create_test_table(
+        &self,
+        database: &ClickhouseClient<Self>,
+        random_seed: u32,
+    ) -> Result<(), DatabaseError>{
+        Ok(())
+    }
+
+    async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>{
+        Ok(())
+    }
+
+    fn all_tables() -> Vec<Self>
+    {
+        Vec::new()
+    }
+
+    /// <DB NAME>.<TABLE NAME>
+    fn full_name(&self) -> String {
+        String::new()
+    }
+
+    fn db_name(&self) -> String{
+        String::new()
+    }
+
+    fn test_db_name(&self) -> String{
+        String::new()
+    }
+
+    fn from_database_table_str(val: &str) -> Self{
+        Self::default()
+    }
+}
