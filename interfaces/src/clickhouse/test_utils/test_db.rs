@@ -5,7 +5,7 @@ use futures::{future::join_all, Future};
 use rand::Rng;
 
 use crate::{
-    clickhouse::{client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery},
+    clickhouse::{client::ClickhouseClient, config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery},
     errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
