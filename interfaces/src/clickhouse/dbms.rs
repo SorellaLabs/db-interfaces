@@ -155,6 +155,8 @@ macro_rules! clickhouse_dbms {
 #[derive(Debug, Default, Clone)]
 pub struct NullDBMS;
 
+
+#[async_trait::async_trait]
 impl ClickhouseDBMS for NullDBMS {
     const CLUSTER: Option<&'static str> = None;
 
