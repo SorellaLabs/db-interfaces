@@ -68,7 +68,7 @@ macro_rules! clickhouse_dbms {
 
         #[async_trait::async_trait]
         impl ::db_interfaces::clickhouse::dbms::ClickhouseDBMS for $dbms {
-            const CLUSTER: Option<&'static str> = Some("eth_cluster0");
+            const CLUSTER: Option<&'static str> = $cluster;
 
              fn dependant_tables(&self) -> &[Self] {
                 match self {
