@@ -4,37 +4,36 @@ use eyre::Result;
 use futures::{future::join_all, Future};
 use rand::Rng;
 
-use crate::errors::DatabaseError;
 use crate::{
-    clickhouse::{
-        client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError,
-        types::ClickhouseQuery,
-    },
+    clickhouse::{client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery},
+    errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
-    Database, DatabaseTable,
+    Database, DatabaseTable
 };
 
 #[derive(Clone)]
 pub struct ClickhouseTestingClient<D> {
-    pub client: ClickhouseClient<D>,
+    pub client: ClickhouseClient<D>
 }
 
 impl<D> Default for ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS,
+    D: ClickhouseDBMS
 {
     fn default() -> Self {
-        Self {
-            client: ClickhouseClient::<D>::default(),
-        }
+        Self { client: ClickhouseClient::<D>::default() }
     }
 }
 
 impl<D> ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS,
+    D: ClickhouseDBMS
 {
+    pub fn new(config: ClickhouseConfig) -> Self {
+        Self { client: ClickhouseClient::<D>::new(config) }
+    }
+
     pub async fn setup(&self, tables: Option<&[D]>) -> Result<(), DatabaseError> {
         self.setup_cleanup(tables, false).await?; // drops all dbs if necessary
         self.setup_cleanup(tables, true).await?; // drops all dbs
@@ -51,16 +50,8 @@ where
         Ok(())
     }
 
-    pub async fn setup_cleanup(
-        &self,
-        tables: Option<&[D]>,
-        create: bool,
-    ) -> Result<(), DatabaseError> {
-        let cmd = if create {
-            "CREATE DATABASE IF NOT EXISTS"
-        } else {
-            "DROP DATABASE IF EXISTS"
-        };
+    pub async fn setup_cleanup(&self, tables: Option<&[D]>, create: bool) -> Result<(), DatabaseError> {
+        let cmd = if create { "CREATE DATABASE IF NOT EXISTS" } else { "DROP DATABASE IF EXISTS" };
 
         let drop_on_cluster = &D::CLUSTER.map(|s: &str| format!("ON CLUSTER {s}"));
 
@@ -89,15 +80,12 @@ where
 #[async_trait::async_trait]
 impl<D> Database for ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS,
+    D: ClickhouseDBMS
 {
     type DBMS = D;
 
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
-        let table = format!(
-            "test_{}",
-            Self::DBMS::from_database_table_str(T::NAME).full_name()
-        );
+        let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
         let mut insert = self
             .client
             .client
@@ -117,14 +105,8 @@ where
         Ok(())
     }
 
-    async fn insert_many<T: DatabaseTable>(
-        &self,
-        values: &[T::DataType],
-    ) -> Result<(), DatabaseError> {
-        let table = format!(
-            "test_{}",
-            Self::DBMS::from_database_table_str(T::NAME).full_name()
-        );
+    async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
+        let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
         let mut insert = self
             .client
             .client
@@ -146,11 +128,7 @@ where
         Ok(())
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
         let query: String = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one(&query, params).await
@@ -159,37 +137,25 @@ where
     async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: &P,
+        params: &P
     ) -> Result<Option<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one_optional(&query, params).await
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_many(&query, params).await
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
         self.client.query_raw::<Q, P>(&query, params).await
     }
 
-    async fn execute_remote<P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.execute_remote(&query, params).await
@@ -199,11 +165,11 @@ where
 #[async_trait::async_trait]
 impl<D> TestDatabase<D> for ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS,
+    D: ClickhouseDBMS
 {
     async fn run_test_with_test_db<'t, F>(&'t self, tables: &'t [D], f: F)
     where
-        F: FnOnce(&'t Self) -> Pin<Box<dyn Future<Output = ()> + 't + Send>> + Send,
+        F: FnOnce(&'t Self) -> Pin<Box<dyn Future<Output = ()> + 't + Send>> + Send
     {
         self.setup(Some(tables)).await.unwrap();
 
