@@ -9,29 +9,14 @@ use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTab
 
 #[derive(Clone)]
 pub struct ClickhouseClient<D> {
-    pub client: Client,
-    _phantom:   PhantomData<D>
+    pub client:   Client,
+    pub _phantom: PhantomData<D>
 }
 
 impl<D> ClickhouseClient<D>
 where
     D: ClickhouseDBMS
 {
-    pub fn new(config: ClickhouseConfig) -> Self {
-        // builds the clickhouse client
-        let client = Client::default()
-            .with_url(config.url)
-            .with_user(config.user)
-            .with_password(config.password);
-
-        if let Some(db) = config.database {
-            let client = client.clone().with_database(db);
-            return Self { client, _phantom: PhantomData::default() };
-        }
-
-        Self { client, _phantom: PhantomData::default() }
-    }
-
     pub fn credentials(&self) -> Credentials {
         self.client.credentials()
     }
