@@ -21,6 +21,10 @@ impl<D> ClickhouseTestingClient<D>
 where
     D: ClickhouseDBMS
 {
+    pub fn new_from_db(client: ClickhouseClient<D>) -> Self {
+        Self { client }
+    }
+
     pub async fn setup(&self, tables: Option<&[D]>) -> Result<(), DatabaseError> {
         self.setup_cleanup(tables, false).await?; // drops all dbs if necessary
         self.setup_cleanup(tables, true).await?; // drops all dbs
