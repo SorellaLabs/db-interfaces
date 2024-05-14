@@ -18,7 +18,7 @@ serde_json = "1.0"
 erased-serde = "0.3.31"
 
 # clickhouse 
-clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["tls"] }
+clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["tls", "time"] }
 
 # error handling
 eyre = "0.6.5"

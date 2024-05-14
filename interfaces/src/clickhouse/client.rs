@@ -13,33 +13,6 @@ pub struct ClickhouseClient<D> {
     _phantom:   PhantomData<D>
 }
 
-impl<D> Default for ClickhouseClient<D>
-where
-    D: ClickhouseDBMS
-{
-    fn default() -> Self {
-        dotenv::dotenv().ok();
-
-        // clickhouse path
-        let clickhouse_path = format!(
-            "{}:{}",
-            &env::var("CLICKHOUSE_URL").expect("CLICKHOUSE_URL not found in .env"),
-            &env::var("CLICKHOUSE_PORT").expect("CLICKHOUSE_PORT not found in .env")
-        );
-
-        let https = HttpsConnector::new();
-        let https_client = hyper::Client::builder().build::<_, hyper::Body>(https);
-
-        // builds the clickhouse client
-        let client = Client::with_http_client(https_client)
-            .with_url(clickhouse_path)
-            .with_user(env::var("CLICKHOUSE_USER").expect("CLICKHOUSE_USER not found in .env"))
-            .with_password(env::var("CLICKHOUSE_PASS").expect("CLICKHOUSE_PASS not found in .env"));
-
-        Self { client, _phantom: PhantomData }
-    }
-}
-
 impl<D> ClickhouseClient<D>
 where
     D: ClickhouseDBMS

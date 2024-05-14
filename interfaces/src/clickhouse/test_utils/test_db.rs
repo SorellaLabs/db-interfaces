@@ -17,15 +17,6 @@ pub struct ClickhouseTestingClient<D> {
     pub client: ClickhouseClient<D>
 }
 
-impl<D> Default for ClickhouseTestingClient<D>
-where
-    D: ClickhouseDBMS
-{
-    fn default() -> Self {
-        Self { client: ClickhouseClient::<D>::default() }
-    }
-}
-
 impl<D> ClickhouseTestingClient<D>
 where
     D: ClickhouseDBMS
