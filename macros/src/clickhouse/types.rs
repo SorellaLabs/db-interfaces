@@ -18,29 +18,26 @@ pub(crate) enum ClickhouseTableKind {
 impl ClickhouseTableKind {
     pub(crate) fn get_table_type(file_path: &str) -> Self {
         let file_str = std::fs::read_to_string(file_path)
-            .unwrap_or_else(|_| panic!("Failed to read {}", file_path));
-        if file_str.contains(&ClickhouseTableKind::Distributed.to_string()) {
-            ClickhouseTableKind::Distributed
-        } else if file_str.contains(&ClickhouseTableKind::RemoteSecure.to_string()) {
-            ClickhouseTableKind::RemoteSecure
-        } else if file_str.contains(&ClickhouseTableKind::Remote.to_string()) {
-            ClickhouseTableKind::Remote
-        } else if file_str.contains(&ClickhouseTableKind::ReplicatedMergeTree.to_string()) {
-            ClickhouseTableKind::ReplicatedMergeTree
-        } else if file_str
-            .contains(&ClickhouseTableKind::ReplicatedAggregatingMergeTree.to_string())
-        {
-            ClickhouseTableKind::ReplicatedAggregatingMergeTree
-        } else if file_str.contains(&ClickhouseTableKind::ReplicatedReplacingMergeTree.to_string())
-        {
-            ClickhouseTableKind::ReplicatedReplacingMergeTree
-        } else if file_str.contains(&ClickhouseTableKind::MaterializedView.to_string()) {
-            ClickhouseTableKind::MaterializedView
-        } else if file_str.contains(&ClickhouseTableKind::Null.to_string()) {
-            ClickhouseTableKind::Null
-        } else {
-            panic!("None of the table engines match!")
+            .expect(format!("Failed to read file {}", file_path).as_str());
+
+        let table_types = [
+            ClickhouseTableKind::Distributed,
+            ClickhouseTableKind::RemoteSecure,
+            ClickhouseTableKind::Remote,
+            ClickhouseTableKind::ReplicatedMergeTree,
+            ClickhouseTableKind::ReplicatedAggregatingMergeTree,
+            ClickhouseTableKind::ReplicatedReplacingMergeTree,
+            ClickhouseTableKind::MaterializedView,
+            ClickhouseTableKind::Null,
+        ];
+
+        for table_type in &table_types {
+            if file_str.contains(&table_type.to_string()) {
+                return table_type.clone();
+            }
         }
+
+        panic!("None of the table engines match!");
     }
 }
 
