@@ -23,40 +23,21 @@ pub trait Database: Sync + Send {
 
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError>;
 
-    async fn insert_many<T: DatabaseTable>(
-        &self,
-        values: &[T::DataType],
-    ) -> Result<(), DatabaseError>;
+    async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError>;
 
-    async fn query_one<Q: DatabaseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Q, DatabaseError>;
+    async fn query_one<Q: DatabaseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError>;
 
     async fn query_one_optional<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: &P,
+        params: &P
     ) -> Result<Option<Q>, DatabaseError>;
 
-    async fn query_many<Q: DatabaseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Vec<Q>, DatabaseError>;
+    async fn query_many<Q: DatabaseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError>;
 
-    async fn query_raw<Q: DatabaseQuery, P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<Vec<u8>, DatabaseError>;
+    async fn query_raw<Q: DatabaseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError>;
 
-    async fn execute_remote<P: BindParameters>(
-        &self,
-        query: impl AsRef<str> + Send,
-        params: &P,
-    ) -> Result<(), DatabaseError>;
+    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError>;
 }
 
 pub trait DatabaseQuery: ClickhouseQuery {}
