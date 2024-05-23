@@ -173,6 +173,8 @@ where
     fn modify_query_str(query: &str) -> String {
         let mut query = query.to_string();
 
+        println!("QUERY: {}", query);
+
         let db_names_w_test = D::all_tables()
             .iter()
             .map(|t| (t.db_name(), t.test_db_name()))
