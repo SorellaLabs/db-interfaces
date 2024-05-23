@@ -162,7 +162,6 @@ where
     where
         F: FnOnce(&'t Self) -> Pin<Box<dyn Future<Output = ()> + 't + Send>> + Send
     {
-        println!("TABLES: {:?}", tables);
         self.setup(Some(tables)).await.unwrap();
 
         let fut = f(self);

@@ -45,6 +45,7 @@ where
     /// FOR TESTING: creates the test table and associated test tables
     async fn create_test_table(database: &ClickhouseClient<D>, random_seed: u32) -> Result<(), DatabaseError> {
         let table_sql_path = Self::FILE_PATH;
+        println!("TABLE: {:?}", table_sql_path);
         let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
         create_sql = Self::replace_test_str(create_sql);
 
