@@ -1,7 +1,5 @@
-use super::errors::ClickhouseError;
-use super::{client::ClickhouseClient, dbms::ClickhouseDBMS, types::ClickhouseInsert};
-use crate::errors::DatabaseError;
-use crate::Database;
+use super::{client::ClickhouseClient, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseInsert};
+use crate::{errors::DatabaseError, Database};
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub enum ClickhouseTableKind {
@@ -14,14 +12,14 @@ pub enum ClickhouseTableKind {
     MaterializedView,
     Null,
     #[default]
-    None,
+    None
 }
 
 /// trait for different implementations of clickhouse tables
 #[async_trait::async_trait]
 pub trait ClickhouseTable<D>: Send + Sync
 where
-    D: ClickhouseDBMS + Send + Sync + 'static,
+    D: ClickhouseDBMS + Send + Sync + 'static
 {
     const DATABASE_NAME: &'static str;
     const TABLE_NAME: &'static str;
@@ -34,8 +32,7 @@ where
     /// creates the table and associated tables
     async fn create_table(database: &ClickhouseClient<D>) -> Result<(), DatabaseError> {
         let table_sql_path = Self::FILE_PATH;
-        let create_sql = std::fs::read_to_string(table_sql_path)
-            .map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
+        let create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
         database.execute_remote(&create_sql, &()).await?;
 
         for table in Self::CHILD_TABLES {
@@ -46,23 +43,16 @@ where
     }
 
     /// FOR TESTING: creates the test table and associated test tables
-    async fn create_test_table(
-        database: &ClickhouseClient<D>,
-        random_seed: u32,
-    ) -> Result<(), DatabaseError> {
+    async fn create_test_table(database: &ClickhouseClient<D>, random_seed: u32) -> Result<(), DatabaseError> {
         let table_sql_path = Self::FILE_PATH;
-        let mut create_sql = std::fs::read_to_string(table_sql_path)
-            .map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
+        let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
         create_sql = Self::replace_test_str(create_sql);
 
         let table_type = Self::TABLE_TYPE;
         if matches!(table_type, ClickhouseTableKind::Distributed) {
             database.execute_remote(&create_sql, &()).await?;
         } else {
-            create_sql = create_sql.replace(
-                &format!("/{}", Self::TABLE_NAME),
-                &format!("/test{}/{}", random_seed, Self::TABLE_NAME),
-            );
+            create_sql = create_sql.replace(&format!("/{}", Self::TABLE_NAME), &format!("/test{}/{}", random_seed, Self::TABLE_NAME));
 
             database.execute_remote(&create_sql, &()).await?;
         }
@@ -80,10 +70,7 @@ where
             .map(|s| format!("ON CLUSTER {s}"))
             .unwrap_or_default();
 
-        let drop_query = format!(
-            "DROP DATABASE IF EXISTS {} {drop_on_cluster}",
-            Self::test_database_name()
-        );
+        let drop_query = format!("DROP DATABASE IF EXISTS {} {drop_on_cluster}", Self::test_database_name());
         database.execute_remote(&drop_query, &()).await?;
 
         Ok(())
@@ -110,6 +97,8 @@ where
     }
 
     fn replace_test_str(str: String) -> String {
+        println!("QUERY: {}", str);
+
         let db_name = Self::database_name();
         let test_db_name = Self::test_database_name();
 
@@ -121,6 +110,8 @@ where
 
         let mut str = str.replace(&from0, &to0);
         str = str.replace(&from1, &to1);
+
+        println!("\n\nQUERY: {}\n\n", str);
 
         str
     }
