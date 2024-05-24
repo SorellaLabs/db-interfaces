@@ -26,8 +26,10 @@ where
     }
 
     pub async fn setup(&self, tables: Option<&[D]>) -> Result<(), DatabaseError> {
+        println!("STARTING SETUP");
         self.setup_cleanup(tables, false).await?; // drops all dbs if necessary
         self.setup_cleanup(tables, true).await?; // drops all dbs
+        println!("STOPPING SETUP");
 
         join_all(tables.unwrap_or_default().iter().map(|table| {
             let mut rng = rand::thread_rng();
