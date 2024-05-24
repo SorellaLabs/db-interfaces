@@ -13,7 +13,7 @@ pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
 pub use db_interfaces_macros::remote_clickhouse_table;
-use errors::DatabaseError;
+pub use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;
 
