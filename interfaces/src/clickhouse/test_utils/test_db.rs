@@ -29,7 +29,7 @@ where
         println!("STARTING SETUP");
         self.setup_cleanup(tables, false).await?; // drops all dbs if necessary
         self.setup_cleanup(tables, true).await?; // drops all dbs
-        println!("TABLES: {}", tables.len());
+        println!("TABLES: {:?}", tables.as_ref().map(|t| t.len()));
 
         join_all(tables.unwrap_or_default().iter().map(|table| {
             let mut rng = rand::thread_rng();
