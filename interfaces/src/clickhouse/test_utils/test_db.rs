@@ -34,7 +34,7 @@ where
         join_all(tables.unwrap_or_default().iter().map(|table| {
             let mut rng = rand::thread_rng();
             let random_seed: u32 = rng.gen();
-            async move { table.create_test_table(&self.client, random_seed).await }
+            table.create_test_table(&self.client, random_seed)
         }))
         .await
         .into_iter()
