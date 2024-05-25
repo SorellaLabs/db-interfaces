@@ -97,6 +97,7 @@ where
     }
 
     fn replace_test_str(str: String) -> String {
+        panic!("{str}");
         println!("QUERY: {}", str);
 
         let db_name = Self::database_name();
