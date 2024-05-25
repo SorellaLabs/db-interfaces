@@ -4,7 +4,7 @@ use clickhouse::{query::Query, *};
 use eyre::Result;
 use hyper_tls::HttpsConnector;
 
-use super::{config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery};
+use super::{config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, tables::ClickhouseTable, types::ClickhouseQuery};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]
@@ -15,7 +15,7 @@ pub struct ClickhouseClient<D> {
 
 impl<D> ClickhouseClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseDBMS + 'static
 {
     pub fn credentials(&self) -> Credentials {
         self.client.credentials()
@@ -27,6 +27,19 @@ where
 
     pub fn blank_query(&self, query: &str) -> Query {
         self.client.query(query)
+    }
+
+    /// creates the table and associated tables
+    pub async fn create_table<T: ClickhouseTable<D>>(&self) -> Result<(), DatabaseError> {
+        let table_sql_path = T::FILE_PATH;
+        let create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
+        self.execute_remote(&create_sql, &()).await?;
+
+        for table in T::CHILD_TABLES {
+            table.create_table(self).await?;
+        }
+
+        Ok(())
     }
 }
 

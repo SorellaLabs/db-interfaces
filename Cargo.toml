@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "interfaces",
-    "macros"
+    "macros", 
+    "tests"
 ]
 
 resolver = "2"
@@ -13,3 +14,4 @@ rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/SorellaLabs"
 repository = "https://github.com/SorellaLabs/db-interfaces"
+

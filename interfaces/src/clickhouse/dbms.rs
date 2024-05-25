@@ -1,21 +1,14 @@
 use super::client::ClickhouseClient;
 use crate::errors::DatabaseError;
+use futures::Future;
 
-#[async_trait::async_trait]
+
 pub trait ClickhouseDBMS: Sized + Sync + Send {
     const CLUSTER: Option<&'static str>;
 
     fn dependant_tables(&self) -> &[Self];
 
-    async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>;
-
-    async fn create_test_table(
-        &self,
-        database: &ClickhouseClient<Self>,
-        random_seed: u32,
-    ) -> Result<(), DatabaseError>;
-
-    async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>;
+    fn create_table<D: ClickhouseDBMS>(&self, database: &ClickhouseClient<D>) -> impl Future<Output = Result<(), DatabaseError>> + Send;
 
     fn all_tables() -> Vec<Self>;
 
@@ -23,8 +16,6 @@ pub trait ClickhouseDBMS: Sized + Sync + Send {
     fn full_name(&self) -> String;
 
     fn db_name(&self) -> String;
-
-    fn test_db_name(&self) -> String;
 
     fn from_database_table_str(val: &str) -> Self;
 }
@@ -66,43 +57,21 @@ macro_rules! clickhouse_dbms {
             $($table),*
         }
 
-        #[async_trait::async_trait]
         impl ::db_interfaces::clickhouse::dbms::ClickhouseDBMS for $dbms {
             const CLUSTER: Option<&'static str> = $cluster;
 
              fn dependant_tables(&self) -> &[Self] {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::CHILD_TABLES
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<$dbms>>::CHILD_TABLES
                     })*
                 }
             }
 
-             async fn create_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
+             async fn create_table<D: ::db_interfaces::clickhouse::dbms::ClickhouseDBMS>(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<D>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_table(database).await?
-                    })*
-                }
-
-                Ok(())
-            }
-
-
-             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>, random_seed: u32) -> Result<(), ::db_interfaces::errors::DatabaseError> {
-                match self {
-                    $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::create_test_table(database, random_seed).await?
-                    })*
-                }
-
-                Ok(())
-            }
-
-            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::client::ClickhouseClient<Self>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
-                match self {
-                    $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::drop_test_db(database).await?
+                        database.create_table::<$table>().await?
                     })*
                 }
 
@@ -112,7 +81,7 @@ macro_rules! clickhouse_dbms {
             fn db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::database_name()
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<$dbms>>::database_name()
                     })*
                 }
             }
@@ -120,15 +89,7 @@ macro_rules! clickhouse_dbms {
             fn full_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::full_name()
-                    })*
-                }
-            }
-
-            fn test_db_name(&self) -> String {
-                match self {
-                    $($dbms::$table => {
-                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<Self>>::test_database_name()
+                        <$table as ::db_interfaces::clickhouse::tables::ClickhouseTable<$dbms>>::full_name()
                     })*
                 }
             }
@@ -146,6 +107,37 @@ macro_rules! clickhouse_dbms {
                 }
             }
         }
+
+
+        impl ::db_interfaces::clickhouse::test_utils::ClickhouseTestingDBMS for $dbms {
+             async fn create_test_table(&self, database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestingClient<$dbms>, random_seed: u32) -> Result<(), ::db_interfaces::errors::DatabaseError> {
+                match self {
+                    $($dbms::$table => {
+                        database.create_test_table::<$table>(random_seed).await?
+                    })*
+                }
+
+                Ok(())
+            }
+
+            async fn drop_test_db(&self, database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestingClient<$dbms>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
+                match self {
+                    $($dbms::$table => {
+                        database.drop_test_db::<$table>().await?
+                    })*
+                }
+
+                Ok(())
+            }
+
+            fn test_db_name(&self) -> String {
+                match self {
+                    $($dbms::$table => {
+                        <$table as ::db_interfaces::clickhouse::test_utils::ClickhouseTestingTable<Self>>::test_database_name()
+                    })*
+                }
+            }
+        }
     }
 }
 
@@ -156,7 +148,6 @@ macro_rules! clickhouse_dbms {
 pub struct NullDBMS;
 
 
-#[async_trait::async_trait]
 impl ClickhouseDBMS for NullDBMS {
     const CLUSTER: Option<&'static str> = None;
 
@@ -164,19 +155,7 @@ impl ClickhouseDBMS for NullDBMS {
         &[]
     }
 
-    async fn create_table(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError> {
-        Ok(())
-    }
-
-    async fn create_test_table(
-        &self,
-        database: &ClickhouseClient<Self>,
-        random_seed: u32,
-    ) -> Result<(), DatabaseError>{
-        Ok(())
-    }
-
-    async fn drop_test_db(&self, database: &ClickhouseClient<Self>) -> Result<(), DatabaseError>{
+    async fn create_table<D: ClickhouseDBMS>(&self, database: &ClickhouseClient<D>) -> Result<(), DatabaseError> {
         Ok(())
     }
 
@@ -191,10 +170,6 @@ impl ClickhouseDBMS for NullDBMS {
     }
 
     fn db_name(&self) -> String{
-        String::new()
-    }
-
-    fn test_db_name(&self) -> String{
         String::new()
     }
 

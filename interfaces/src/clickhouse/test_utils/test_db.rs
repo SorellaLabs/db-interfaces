@@ -4,8 +4,12 @@ use eyre::Result;
 use futures::{future::join_all, Future};
 use rand::Rng;
 
+use super::ClickhouseTestingTable;
 use crate::{
-    clickhouse::{client::ClickhouseClient, config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery},
+    clickhouse::{
+        client::ClickhouseClient, config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, tables::ClickhouseTableKind,
+        test_utils::ClickhouseTestingDBMS, types::ClickhouseQuery
+    },
     errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
@@ -19,7 +23,7 @@ pub struct ClickhouseTestingClient<D> {
 
 impl<D> ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestingDBMS + 'static
 {
     pub fn new_from_db(client: ClickhouseClient<D>) -> Self {
         Self { client }
@@ -34,7 +38,7 @@ where
         join_all(tables.unwrap_or_default().iter().map(|table| {
             let mut rng = rand::thread_rng();
             let random_seed: u32 = rng.gen();
-            table.create_test_table(&self.client, random_seed)
+            table.create_test_table(&self, random_seed)
         }))
         .await
         .into_iter()
@@ -68,12 +72,47 @@ where
 
         Ok(())
     }
+
+    /// creates the test table and associated test tables
+    pub async fn create_test_table<T: ClickhouseTestingTable<D>>(&self, random_seed: u32) -> Result<(), DatabaseError> {
+        let table_sql_path = T::FILE_PATH;
+        println!("TABLE: {:?}", table_sql_path);
+        let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
+        create_sql = T::replace_test_str(create_sql);
+
+        let table_type = T::TABLE_TYPE;
+        if matches!(table_type, ClickhouseTableKind::Distributed) {
+            self.client.execute_remote(&create_sql, &()).await?;
+        } else {
+            create_sql = create_sql.replace(&format!("/{}", T::TABLE_NAME), &format!("/test{}/{}", random_seed, T::TABLE_NAME));
+
+            self.client.execute_remote(&create_sql, &()).await?;
+        }
+
+        for table in T::CHILD_TABLES {
+            table.create_test_table(self, random_seed).await?;
+        }
+
+        Ok(())
+    }
+
+    /// drops the test table and associated test tables
+    pub async fn drop_test_db<T: ClickhouseTestingTable<D>>(&self) -> Result<(), DatabaseError> {
+        let drop_on_cluster = D::CLUSTER
+            .map(|s| format!("ON CLUSTER {s}"))
+            .unwrap_or_default();
+
+        let drop_query = format!("DROP DATABASE IF EXISTS {} {drop_on_cluster}", T::test_database_name());
+        self.client.execute_remote(&drop_query, &()).await?;
+
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]
 impl<D> Database for ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestingDBMS + 'static
 {
     type DBMS = D;
 
@@ -158,7 +197,7 @@ where
 #[async_trait::async_trait]
 impl<D> TestDatabase<D> for ClickhouseTestingClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestingDBMS + 'static
 {
     async fn run_test_with_test_db<'t, F>(&'t self, tables: &'t [D], f: F)
     where

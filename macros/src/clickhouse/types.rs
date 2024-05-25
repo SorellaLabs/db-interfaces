@@ -12,13 +12,15 @@ pub(crate) enum ClickhouseTableKind {
     ReplicatedAggregatingMergeTree,
     ReplicatedReplacingMergeTree,
     MaterializedView,
-    Null,
+    ReplacingMergeTree,
+    MergeTree,
+    AggregatingMergeTree,
+    Null
 }
 
 impl ClickhouseTableKind {
     pub(crate) fn get_table_type(file_path: &str) -> Self {
-        let file_str = std::fs::read_to_string(file_path)
-            .unwrap_or_else(|_| panic!("Failed to read {}", file_path));
+        let file_str = std::fs::read_to_string(file_path).unwrap_or_else(|_| panic!("Failed to read {}", file_path));
         if file_str.contains(&ClickhouseTableKind::Distributed.to_string()) {
             ClickhouseTableKind::Distributed
         } else if file_str.contains(&ClickhouseTableKind::RemoteSecure.to_string()) {
@@ -27,13 +29,16 @@ impl ClickhouseTableKind {
             ClickhouseTableKind::Remote
         } else if file_str.contains(&ClickhouseTableKind::ReplicatedMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedMergeTree
-        } else if file_str
-            .contains(&ClickhouseTableKind::ReplicatedAggregatingMergeTree.to_string())
-        {
+        } else if file_str.contains(&ClickhouseTableKind::ReplicatedAggregatingMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedAggregatingMergeTree
-        } else if file_str.contains(&ClickhouseTableKind::ReplicatedReplacingMergeTree.to_string())
-        {
+        } else if file_str.contains(&ClickhouseTableKind::AggregatingMergeTree.to_string()) {
+            ClickhouseTableKind::AggregatingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::ReplicatedReplacingMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedReplacingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::ReplacingMergeTree.to_string()) {
+            ClickhouseTableKind::ReplacingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::MergeTree.to_string()) {
+            ClickhouseTableKind::MergeTree
         } else if file_str.contains(&ClickhouseTableKind::MaterializedView.to_string()) {
             ClickhouseTableKind::MaterializedView
         } else if file_str.contains(&ClickhouseTableKind::Null.to_string()) {
@@ -61,8 +66,11 @@ impl From<&ClickhouseTableKind> for &'static str {
             ClickhouseTableKind::ReplicatedMergeTree => "ReplicatedMergeTree",
             ClickhouseTableKind::ReplicatedAggregatingMergeTree => "ReplicatedAggregatingMergeTree",
             ClickhouseTableKind::ReplicatedReplacingMergeTree => "ReplicatedReplacingMergeTree",
+            ClickhouseTableKind::ReplacingMergeTree => "ReplacingMergeTree",
+            ClickhouseTableKind::AggregatingMergeTree => "AggregatingMergeTree",
+            ClickhouseTableKind::MergeTree => "MergeTree",
             ClickhouseTableKind::MaterializedView => "CREATE MATERIALIZED VIEW",
-            ClickhouseTableKind::Null => "Null",
+            ClickhouseTableKind::Null => "Null"
         }
     }
 }
@@ -88,6 +96,15 @@ impl From<ClickhouseTableKind> for TokenStream {
             ClickhouseTableKind::ReplicatedReplacingMergeTree => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedReplacingMergeTree }
             }
+            ClickhouseTableKind::MergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::MergeTree }
+            }
+            ClickhouseTableKind::AggregatingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::AggregatingMergeTree }
+            }
+            ClickhouseTableKind::ReplacingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplacingMergeTree }
+            }
             ClickhouseTableKind::MaterializedView => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::MaterializedView }
             }
@@ -100,38 +117,27 @@ impl From<ClickhouseTableKind> for TokenStream {
 
 pub(crate) struct TableMeta {
     pub(crate) table_name_lowercase: String,
-    pub(crate) enum_name: Ident,
-    pub(crate) table_type: TokenStream,
-    pub(crate) file_path: LitStr,
+    pub(crate) enum_name:            Ident,
+    pub(crate) table_type:           TokenStream,
+    pub(crate) file_path:            LitStr
 }
 
 impl TableMeta {
-    pub(crate) fn new(
-        parsed: ClickhouseTableParse,
-        table_path: Option<&LitStr>,
-    ) -> syn::Result<Self> {
+    pub(crate) fn new(parsed: ClickhouseTableParse, table_path: Option<&LitStr>) -> syn::Result<Self> {
         let mut table_name_str = parsed.table_name.to_string();
         let enum_name = Ident::new(&table_name_str, parsed.table_name.span());
 
         table_name_str = table_name_str.replace("Clickhouse", "");
-        let mut sql_file_name =
-            add_underscore_and_lower(&table_name_str.replace("Local", "")).to_lowercase();
+        let mut sql_file_name = add_underscore_and_lower(&table_name_str.replace("Local", "")).to_lowercase();
         let file_path_str = find_file_path(&sql_file_name, &parsed.database_name, table_path);
         let file_path = LitStr::new(&file_path_str, parsed.table_name.span());
 
         let table_type = ClickhouseTableKind::get_table_type(&file_path_str);
-        if matches!(table_type, ClickhouseTableKind::Remote)
-            || matches!(table_type, ClickhouseTableKind::RemoteSecure)
-        {
+        if matches!(table_type, ClickhouseTableKind::Remote) || matches!(table_type, ClickhouseTableKind::RemoteSecure) {
             sql_file_name.push_str("_remote");
         }
 
-        let this = Self {
-            table_name_lowercase: sql_file_name,
-            enum_name,
-            table_type: table_type.into(),
-            file_path,
-        };
+        let this = Self { table_name_lowercase: sql_file_name, enum_name, table_type: table_type.into(), file_path };
 
         Ok(this)
     }
