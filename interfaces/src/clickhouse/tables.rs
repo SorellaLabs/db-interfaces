@@ -97,8 +97,6 @@ where
     }
 
     fn replace_test_str(str: String) -> String {
-        println!("QUERY: {}", str);
-
         let db_name = Self::database_name();
         let test_db_name = Self::test_database_name();
 
@@ -110,8 +108,6 @@ where
 
         let mut str = str.replace(&from0, &to0);
         str = str.replace(&from1, &to1);
-
-        println!("\n\nQUERY: {}\n\n", str);
 
         str
     }
