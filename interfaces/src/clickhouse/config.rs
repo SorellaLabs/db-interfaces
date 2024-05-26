@@ -61,6 +61,6 @@ impl ClickhouseConfig {
             client = client.clone().with_database(db);
         }
 
-        crate::clickhouse::test_utils::ClickhouseTestClient { client: ClickhouseClient { client, _phantom: PhantomData::default() } }
+        crate::clickhouse::test_utils::ClickhouseTestClient { client: ClickhouseClient { client, _phantom: PhantomData } }
     }
 }
