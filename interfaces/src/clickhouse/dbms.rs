@@ -55,6 +55,8 @@ macro_rules! clickhouse_dbms {
     };
 
     (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
+        #[allow(clippy::manual_async_fn)]
+
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -120,38 +122,6 @@ macro_rules! clickhouse_dbms {
     }
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct NullDBMS;
-
-impl ClickhouseDBMS for NullDBMS {
-    const CLUSTER: Option<&'static str> = None;
-
-    fn dependant_tables(&self) -> &[Self] {
-        &[]
-    }
-
-    fn create_table(&self, _database: &ClickhouseClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
-        Box::pin(async { Ok(()) })
-    }
-
-    fn all_tables() -> Vec<Self> {
-        Vec::new()
-    }
-
-    /// <DB NAME>.<TABLE NAME>
-    fn full_name(&self) -> String {
-        String::new()
-    }
-
-    fn db_name(&self) -> String {
-        String::new()
-    }
-
-    fn from_database_table_str(_val: &str) -> Self {
-        Self
-    }
-}
-
 #[cfg(feature = "test-utils")]
 /// There are 2 possible inputs, for tables (not) in a distributed setup
 ///
@@ -184,6 +154,8 @@ macro_rules! clickhouse_dbms {
     };
 
     (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
+        #[allow(clippy::manual_async_fn)]
+
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -279,6 +251,38 @@ macro_rules! clickhouse_dbms {
             }
         }
 
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct NullDBMS;
+
+impl ClickhouseDBMS for NullDBMS {
+    const CLUSTER: Option<&'static str> = None;
+
+    fn dependant_tables(&self) -> &[Self] {
+        &[]
+    }
+
+    fn create_table(&self, _database: &ClickhouseClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
+        Box::pin(async { Ok(()) })
+    }
+
+    fn all_tables() -> Vec<Self> {
+        Vec::new()
+    }
+
+    /// <DB NAME>.<TABLE NAME>
+    fn full_name(&self) -> String {
+        String::new()
+    }
+
+    fn db_name(&self) -> String {
+        String::new()
+    }
+
+    fn from_database_table_str(_val: &str) -> Self {
+        Self
     }
 }
 
