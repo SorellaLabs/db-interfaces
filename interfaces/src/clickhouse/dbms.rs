@@ -54,12 +54,11 @@ macro_rules! clickhouse_dbms {
     };
 
     (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
-        
-        
+        #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
-            
-            $(#[allow(non_camel_case_types)]
+            $(
+                #[allow(non_camel_case_types)]
                 $table
             ),*
         }
