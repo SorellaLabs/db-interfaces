@@ -2,11 +2,7 @@ use std::{env, fs, io, io::BufRead, path};
 
 use syn::LitStr;
 
-pub(crate) fn find_file_path(
-    table_name: &str,
-    database_name: &str,
-    table_path: Option<&LitStr>,
-) -> String {
+pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: Option<&LitStr>) -> String {
     dotenv::dotenv().ok();
     let root_path = workspace_dir();
     let path = root_path.to_str().unwrap();
@@ -26,14 +22,7 @@ pub(crate) fn find_file_path(
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if (ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()))
-                        || ln.contains(&format!(
-                            "{}.{}_remote ",
-                            database_name,
-                            table_name.to_lowercase()
-                        )))
-                        && ln.contains("CREATE")
-                    {
+                    if check_line(ln, table_name, database_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
@@ -76,8 +65,23 @@ fn visit_dirs(dir: &path::Path) -> io::Result<Vec<fs::DirEntry>> {
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<fs::File>>>
 where
-    P: AsRef<path::Path>,
+    P: AsRef<path::Path>
 {
     let file = fs::File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
+}
+
+fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
+    let formatted = ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()));
+
+    let multi_period_formatted = ln
+        .replace('.', "")
+        .contains(&format!("{}{} ", database_name, table_name.to_lowercase()));
+    let period_count_formatted = ln.chars().filter(|c| c == '.').count() == 2;
+
+    let remote = ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase()));
+
+    let create = ln.contains("CREATE");
+
+    (formatted || (multi_period_formatted && period_count_formatted) || remote) && create
 }
