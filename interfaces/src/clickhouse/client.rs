@@ -1,10 +1,9 @@
-use std::{env, marker::PhantomData};
+use std::marker::PhantomData;
 
 use clickhouse::{query::Query, *};
 use eyre::Result;
-use hyper_tls::HttpsConnector;
 
-use super::{config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery};
+use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, tables::ClickhouseTable, types::ClickhouseQuery};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]
@@ -15,7 +14,7 @@ pub struct ClickhouseClient<D> {
 
 impl<D> ClickhouseClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseDBMS + 'static
 {
     pub fn credentials(&self) -> Credentials {
         self.client.credentials()
@@ -30,7 +29,7 @@ where
     }
 }
 
-#[async_trait::async_trait]
+//#[async_trait::async_trait]
 impl<D> Database for ClickhouseClient<D>
 where
     D: ClickhouseDBMS

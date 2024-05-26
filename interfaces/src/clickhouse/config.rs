@@ -43,7 +43,7 @@ impl ClickhouseConfig {
     }
 
     #[cfg(feature = "test-utils")]
-    pub fn build_testing_client<D: ClickhouseDBMS>(self) -> crate::clickhouse::test_utils::ClickhouseTestingClient<D> {
+    pub fn build_testing_client<D: ClickhouseDBMS>(self) -> crate::clickhouse::test_utils::ClickhouseTestClient<D> {
         let mut client = if self.https {
             let https = HttpsConnector::new();
             let https_client = hyper::Client::builder().build::<_, hyper::Body>(https);
@@ -62,6 +62,6 @@ impl ClickhouseConfig {
             client = client.clone().with_database(db);
         }
 
-        crate::clickhouse::test_utils::ClickhouseTestingClient { client: ClickhouseClient { client, _phantom: PhantomData::default() } }
+        crate::clickhouse::test_utils::ClickhouseTestClient { client: ClickhouseClient { client, _phantom: PhantomData::default() } }
     }
 }

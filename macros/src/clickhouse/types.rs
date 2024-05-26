@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use syn::LitStr;
 
-use super::{table::ClickhouseTableParse, utils::find_file_path};
+use super::{remote_table::RemoteClickhouseTableParse, utils::find_file_path};
 
 pub(crate) enum ClickhouseTableKind {
     Distributed,
@@ -11,6 +11,9 @@ pub(crate) enum ClickhouseTableKind {
     ReplicatedMergeTree,
     ReplicatedAggregatingMergeTree,
     ReplicatedReplacingMergeTree,
+    MergeTree,
+    AggregatingMergeTree,
+    ReplacingMergeTree,
     MaterializedView,
     Null
 }
@@ -30,6 +33,12 @@ impl ClickhouseTableKind {
             ClickhouseTableKind::ReplicatedAggregatingMergeTree
         } else if file_str.contains(&ClickhouseTableKind::ReplicatedReplacingMergeTree.to_string()) {
             ClickhouseTableKind::ReplicatedReplacingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::ReplacingMergeTree.to_string()) {
+            ClickhouseTableKind::ReplacingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::AggregatingMergeTree.to_string()) {
+            ClickhouseTableKind::AggregatingMergeTree
+        } else if file_str.contains(&ClickhouseTableKind::MergeTree.to_string()) {
+            ClickhouseTableKind::MergeTree
         } else if file_str.contains(&ClickhouseTableKind::MaterializedView.to_string()) {
             ClickhouseTableKind::MaterializedView
         } else if file_str.contains(&ClickhouseTableKind::Null.to_string()) {
@@ -57,6 +66,9 @@ impl From<&ClickhouseTableKind> for &'static str {
             ClickhouseTableKind::ReplicatedMergeTree => "ReplicatedMergeTree",
             ClickhouseTableKind::ReplicatedAggregatingMergeTree => "ReplicatedAggregatingMergeTree",
             ClickhouseTableKind::ReplicatedReplacingMergeTree => "ReplicatedReplacingMergeTree",
+            ClickhouseTableKind::MergeTree => "MergeTree",
+            ClickhouseTableKind::AggregatingMergeTree => "AggregatingMergeTree",
+            ClickhouseTableKind::ReplacingMergeTree => "ReplacingMergeTree",
             ClickhouseTableKind::MaterializedView => "CREATE MATERIALIZED VIEW",
             ClickhouseTableKind::Null => "Null"
         }
@@ -84,6 +96,15 @@ impl From<ClickhouseTableKind> for TokenStream {
             ClickhouseTableKind::ReplicatedReplacingMergeTree => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplicatedReplacingMergeTree }
             }
+            ClickhouseTableKind::MergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::MergeTree }
+            }
+            ClickhouseTableKind::AggregatingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::AggregatingMergeTree }
+            }
+            ClickhouseTableKind::ReplacingMergeTree => {
+                quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::ReplacingMergeTree }
+            }
             ClickhouseTableKind::MaterializedView => {
                 quote! { ::db_interfaces::clickhouse::tables::ClickhouseTableKind::MaterializedView }
             }
@@ -95,41 +116,26 @@ impl From<ClickhouseTableKind> for TokenStream {
 }
 
 pub(crate) struct TableMeta {
-    pub(crate) table_name_lowercase: String,
-    pub(crate) enum_name:            Ident,
-    pub(crate) table_type:           TokenStream,
-    pub(crate) file_path:            LitStr
+    pub(crate) table_name_str: String,
+    pub(crate) db_table_type:  Ident,
+    pub(crate) database_name:  String,
+    pub(crate) table_type:     TokenStream,
+    pub(crate) file_path:      LitStr
 }
 
 impl TableMeta {
-    pub(crate) fn new(parsed: ClickhouseTableParse, table_path: Option<&LitStr>) -> syn::Result<Self> {
-        let enum_name = parsed.table_name.clone();
+    pub(crate) fn new(parsed: RemoteClickhouseTableParse, table_path: Option<&LitStr>) -> syn::Result<Self> {
+        let db_table_type = parsed.db_table_type();
 
-        let mut table_name_lowercase = parsed.make_table_name_lowercase();
-        let file_path_str = find_file_path(&table_name_lowercase, &parsed.database_name, &parsed.sub_database_name, table_path);
+        let table_name_str = parsed.table_name_string();
+        let database_name = parsed.database_name_string();
+        let file_path_str = find_file_path(&table_name_str, &database_name, table_path);
         let file_path = LitStr::new(&file_path_str, Span::call_site());
 
         let table_type = ClickhouseTableKind::get_table_type(&file_path_str);
-        if matches!(table_type, ClickhouseTableKind::Remote) || matches!(table_type, ClickhouseTableKind::RemoteSecure) {
-            table_name_lowercase.push_str("_remote");
-        }
 
-        let this = Self { table_name_lowercase, enum_name, table_type: table_type.into(), file_path };
+        let this = Self { database_name, table_name_str, db_table_type, table_type: table_type.into(), file_path };
 
         Ok(this)
     }
-}
-
-pub(crate) fn add_underscore_and_lower(s: &str) -> String {
-    let mut result = String::new();
-    let mut chars = s.chars().enumerate().peekable();
-
-    while let Some((idx, c)) = chars.next() {
-        if c.is_uppercase() && chars.peek().is_some() && idx != 0 {
-            result.push('_');
-        }
-        result.push(c);
-    }
-
-    result.to_lowercase()
 }

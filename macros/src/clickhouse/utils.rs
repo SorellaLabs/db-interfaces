@@ -2,7 +2,7 @@ use std::{env, fs, io, io::BufRead, path};
 
 use syn::LitStr;
 
-pub(crate) fn find_file_path(table_name: &str, database_name: &str, sub_db_name: &Option<String>, table_path: Option<&LitStr>) -> String {
+pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: Option<&LitStr>) -> String {
     dotenv::dotenv().ok();
     let root_path = workspace_dir();
     let path = root_path.to_str().unwrap();
@@ -19,11 +19,10 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, sub_db_name:
             let entry_path = entry.path();
             if let Ok(lines) = read_lines(&entry_path) {
                 for (i, ln) in lines.map_while(Result::ok).enumerate() {
-                    let ln = ln.replace('`', "");
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if check_line(ln, table_name, database_name, sub_db_name) {
+                    if check_line(ln, table_name, database_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
@@ -31,7 +30,10 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, sub_db_name:
         }
     }
 
-    panic!("NO FILE FOUND FOR {table_name} for DATABASE: {database_name}, in directory: {clickhouse_table_dir}\n\nPATHS SEARCHED {:?}", pathsss);
+    panic!(
+        "NO FILE FOUND FOR DATABASE: {database_name}, TABLE: {table_name} for in directory: {clickhouse_table_dir}\n\nPATHS SEARCHED {:?}",
+        pathsss
+    );
 }
 pub(crate) fn workspace_dir() -> path::PathBuf {
     let output = std::process::Command::new(env!("CARGO"))
@@ -72,16 +74,25 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn check_line(ln: String, table_name: &str, database_name: &str, sub_database_name: &Option<String>) -> bool {
-    let formatted = if let Some(sub_db_name) = sub_database_name {
-        ln.contains(&format!("{}.{}.{} ", database_name, sub_db_name, table_name.to_lowercase()))
-    } else {
-        ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()))
-    };
-
+fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
+    let formatted = ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()));
     let remote = ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase()));
 
     let create = ln.contains("CREATE");
 
     (formatted || remote) && create
+}
+
+pub(crate) fn add_underscore_and_lower(s: &str) -> String {
+    let mut result = String::new();
+    let mut chars = s.chars().enumerate().peekable();
+
+    while let Some((idx, c)) = chars.next() {
+        if c.is_uppercase() && chars.peek().is_some() && idx != 0 {
+            result.push('_');
+        }
+        result.push(c);
+    }
+
+    result
 }

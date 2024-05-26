@@ -4,9 +4,8 @@ use futures::Future;
 
 use crate::Database;
 
-#[async_trait::async_trait]
 pub trait TestDatabase<T>: Database + Sized {
-    async fn run_test_with_test_db<'t, F>(&'t self, tables: &'t [T], f: F)
+    fn run_test_with_test_db<'t, F>(&'t self, tables: &'t [T], f: F) -> impl std::future::Future<Output = ()>
     where
         F: FnOnce(&'t Self) -> Pin<Box<dyn Future<Output = ()> + 't + Send>> + Send;
 

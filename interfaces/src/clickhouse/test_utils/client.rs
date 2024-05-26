@@ -4,8 +4,9 @@ use eyre::Result;
 use futures::{future::join_all, Future};
 use rand::Rng;
 
+use super::ClickhouseTestDBMS;
 use crate::{
-    clickhouse::{client::ClickhouseClient, config::ClickhouseConfig, dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery},
+    clickhouse::{client::ClickhouseClient, errors::ClickhouseError, types::ClickhouseQuery},
     errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
@@ -13,13 +14,13 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct ClickhouseTestingClient<D> {
+pub struct ClickhouseTestClient<D> {
     pub client: ClickhouseClient<D>
 }
 
-impl<D> ClickhouseTestingClient<D>
+impl<D> ClickhouseTestClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestDBMS + 'static
 {
     pub fn new_from_db(client: ClickhouseClient<D>) -> Self {
         Self { client }
@@ -32,7 +33,7 @@ where
         join_all(tables.unwrap_or_default().iter().map(|table| {
             let mut rng = rand::thread_rng();
             let random_seed: u32 = rng.gen();
-            async move { table.create_test_table(&self.client, random_seed).await }
+            table.create_test_table(&self, random_seed)
         }))
         .await
         .into_iter()
@@ -68,10 +69,9 @@ where
     }
 }
 
-#[async_trait::async_trait]
-impl<D> Database for ClickhouseTestingClient<D>
+impl<D> Database for ClickhouseTestClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestDBMS + 'static
 {
     type DBMS = D;
 
@@ -153,10 +153,9 @@ where
     }
 }
 
-#[async_trait::async_trait]
-impl<D> TestDatabase<D> for ClickhouseTestingClient<D>
+impl<D> TestDatabase<D> for ClickhouseTestClient<D>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseTestDBMS + 'static
 {
     async fn run_test_with_test_db<'t, F>(&'t self, tables: &'t [D], f: F)
     where
