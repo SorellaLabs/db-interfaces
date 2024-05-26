@@ -94,5 +94,5 @@ pub(crate) fn add_underscore_and_lower(s: &str) -> String {
         result.push(c);
     }
 
-    result
+    result.to_lowercase()
 }
