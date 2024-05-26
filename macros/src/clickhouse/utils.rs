@@ -19,10 +19,11 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
             let entry_path = entry.path();
             if let Ok(lines) = read_lines(&entry_path) {
                 for (i, ln) in lines.map_while(Result::ok).enumerate() {
+                    let ln = ln.replace('`', "");
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if check_line(ln.replace('`', ""), table_name, database_name) {
+                    if check_line(ln, table_name, database_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
