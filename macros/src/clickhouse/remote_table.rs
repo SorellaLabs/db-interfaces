@@ -60,7 +60,7 @@ impl RemoteClickhouseTableParse {
             .map(|table| table.into_token_stream())
             .collect_vec();
 
-        let TableMeta { table_name_str, db_table_type, database_name, table_type, file_path } = TableMeta::new(this.into(), table_path.as_ref())?;
+        let TableMeta { table_name_str, db_table_type, database_name, table_type, file_path } = TableMeta::new(this, table_path.as_ref())?;
 
         let (table_name_str, db_table_type, table_type, file_path, other_tables_needed) =
             (table_name_str, db_table_type, table_type, file_path.into_token_stream(), quote!(&[#(#dbms::#other_tables_needed),*]));
