@@ -2,7 +2,7 @@ use std::{env, fs, io, io::BufRead, path};
 
 use syn::LitStr;
 
-pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: Option<&LitStr>) -> String {
+pub(crate) fn find_file_path(table_name: &str, database_name: &str, sub_db_name: &Option<String>, table_path: Option<&LitStr>) -> String {
     dotenv::dotenv().ok();
     let root_path = workspace_dir();
     let path = root_path.to_str().unwrap();
@@ -23,7 +23,7 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if check_line(ln, table_name, database_name) {
+                    if check_line(ln, table_name, database_name, sub_db_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
@@ -72,17 +72,16 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
-    let formatted = ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()));
-
-    let multi_period_formatted = ln
-        .replace('.', "_")
-        .contains(&format!("{}_{} ", database_name, table_name.to_lowercase()));
-    let period_count_formatted = ln.chars().filter(|c| *c == '.').count() == 2;
+fn check_line(ln: String, table_name: &str, database_name: &str, sub_database_name: &Option<String>) -> bool {
+    let formatted = if let Some(sub_db_name) = sub_database_name {
+        ln.contains(&format!("{}.{}.{} ", database_name, sub_db_name, table_name.to_lowercase()))
+    } else {
+        ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()))
+    };
 
     let remote = ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase()));
 
     let create = ln.contains("CREATE");
 
-    (formatted || (multi_period_formatted && period_count_formatted) || remote) && create
+    (formatted || remote) && create
 }

@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token};
 
@@ -17,6 +17,7 @@ pub(crate) struct RemoteClickhouseTableParse {
     pub(crate) table_path: Option<LitStr>,
     pub(crate) dbms: Ident,
     pub(crate) table_name: Ident,
+    pub(crate) sub_database_name: Option<String>,
     pub(crate) database_name: LitStr,
     pub(crate) data_type: TokenStream,
     pub(crate) other_tables_needed: Vec<Expr>,
@@ -29,6 +30,7 @@ impl RemoteClickhouseTableParse {
             table_path,
             dbms,
             table_name,
+            sub_database_name,
             data_type,
             database_name,
             other_tables_needed,
@@ -126,10 +128,13 @@ impl Parse for RemoteClickhouseTableParse {
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table's dbms"))?;
         input.parse::<Token![,]>()?;
 
-        let database_name: LitStr = input
+        let db_name: LitStr = input
             .parse()
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse database name"))?;
         input.parse::<Token![,]>()?;
+
+        let (database_name, sub_database_name) = try_parse_sub_db(db_name);
+
 
         let table_name: Ident = input
             .parse()
@@ -180,15 +185,26 @@ impl Parse for RemoteClickhouseTableParse {
             data_type,
             database_name,
             other_tables_needed,
+            sub_database_name,
         })
     }
 }
 
-impl From<RemoteClickhouseTableParse> for ClickhouseTableParse {
-    fn from(val: RemoteClickhouseTableParse) -> Self {
-        ClickhouseTableParse {
-            table_name: val.table_name,
-            database_name: val.database_name.value(),
-        }
+
+
+fn try_parse_sub_db(database_name: LitStr) -> (LitStr, Option<String>) {
+    let db_name = database_name.value();
+
+    if db_name.contains('.') {
+        let mut db_iter = db_name.split('.');
+
+        let first_db = db_iter.next().unwrap();
+        let sub_db = db_iter.next().unwrap().to_string();
+
+        (LitStr::new(first_db, Span::call_site()), Some(sub_db))
+
+
+    } else {
+        (database_name,None)
     }
 }
