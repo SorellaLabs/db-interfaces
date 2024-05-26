@@ -82,17 +82,3 @@ fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
 
     (formatted || remote) && create
 }
-
-pub(crate) fn add_underscore_and_lower(s: &str) -> String {
-    let mut result = String::new();
-    let mut chars = s.chars().enumerate().peekable();
-
-    while let Some((idx, c)) = chars.next() {
-        if c.is_uppercase() && chars.peek().is_some() && idx != 0 {
-            result.push('_');
-        }
-        result.push(c);
-    }
-
-    result.to_lowercase()
-}

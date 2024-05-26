@@ -3,7 +3,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{bracketed, parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token};
 
-use super::types::TableMeta;
+use super::table::TableMeta;
 
 pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<TokenStream> {
     let parsed: RemoteClickhouseTableParse = syn::parse2(token_stream)?;
@@ -14,11 +14,11 @@ pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<
 
 #[derive(Clone)]
 pub(crate) struct RemoteClickhouseTableParse {
-    pub(crate) table_path: Option<LitStr>,
-    pub(crate) dbms: Ident,
-    pub(crate) db_hierarchy: Vec<Ident>,
-    pub(crate) data_type: TokenStream,
-    pub(crate) other_tables_needed: Vec<Expr>,
+    pub(crate) table_path:          Option<LitStr>,
+    pub(crate) dbms:                Ident,
+    pub(crate) db_hierarchy:        Vec<Ident>,
+    pub(crate) data_type:           TokenStream,
+    pub(crate) other_tables_needed: Vec<Expr>
 }
 
 impl RemoteClickhouseTableParse {
@@ -39,96 +39,42 @@ impl RemoteClickhouseTableParse {
         if self.db_hierarchy.len() == 2 {
             self.db_hierarchy.last().unwrap().to_string().to_lowercase()
         } else {
-            let main_name = self.db_hierarchy.iter().skip(1).map(|d| d.to_string()).join(".").to_lowercase();
+            let main_name = self
+                .db_hierarchy
+                .iter()
+                .skip(1)
+                .map(|d| d.to_string())
+                .join(".")
+                .to_lowercase();
             format!("`{main_name}`")
         }
-
     }
 }
 
 impl RemoteClickhouseTableParse {
     fn to_token_stream(self) -> syn::Result<TokenStream> {
         let this = self.clone();
-        let RemoteClickhouseTableParse {
-            table_path,
-            dbms,
-            data_type,
-            other_tables_needed,
-            ..
-        } = self;
+        let RemoteClickhouseTableParse { table_path, dbms, data_type, other_tables_needed, .. } = self;
         let other_tables_needed = other_tables_needed
             .into_iter()
             .map(|table| table.into_token_stream())
             .collect_vec();
 
-        let TableMeta {
-            table_name_str,
-            db_table_type,
-            database_name,
-            table_type,
-            file_path,
-        } = TableMeta::new(this.into(), table_path.as_ref())?;
+        let TableMeta { table_name_str, db_table_type, database_name, table_type, file_path } = TableMeta::new(this.into(), table_path.as_ref())?;
 
-        let (table_name_str, db_table_type, table_type, file_path, other_tables_needed) = (
-            table_name_str,
-            db_table_type,
-            table_type,
-            file_path.into_token_stream(),
-            quote!(&[#(#dbms::#other_tables_needed),*]),
-        );
+        let (table_name_str, db_table_type, table_type, file_path, other_tables_needed) =
+            (table_name_str, db_table_type, table_type, file_path.into_token_stream(), quote!(&[#(#dbms::#other_tables_needed),*]));
 
         let no_file_impls = if table_path.is_none() {
             quote! {
-                fn create_table(_database: &::db_interfaces::clickhouse::client::ClickhouseClient<#dbms>) -> impl std::future::Future<Output = Result<(), ::db_interfaces::errors::DatabaseError>> {
+                fn create_table(_database: &::db_interfaces::clickhouse::client::ClickhouseClient<#dbms>)
+                     -> impl std::future::Future<Output = Result<(), ::db_interfaces::errors::DatabaseError>> {
                     unreachable!("Not Enabled - No File Path Given In Macro");
                     async {}
                 }
             }
         } else {
-            // quote! {
-            //     async fn create_table(database: &::db_interfaces::clickhouse::client::ClickhouseClient<#dbms>) -> Result<(), ::db_interfaces::errors::DatabaseError> {
-            //         let table_sql_path = <Self as ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms>>::FILE_PATH;
-            //         let create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ::db_interfaces::clickhouse::errors::ClickhouseError::SqlFileReadError(e.to_string()))?;
-            //         ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?;
-
-            //         Ok(())
-            //     }
-            // }
-            quote! ()
-        };
-
-
-        let no_file_impls_test = if table_path.is_none() {
-            quote! {
-                fn create_test_table(_database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestClient<#dbms>, _random_seed: u32) -> impl std::future::Future<Output = Result<(), ::db_interfaces::errors::DatabaseError>> {
-                    unreachable!("Not Enabled - No File Path Given In Macro");
-                    async {}
-                }
-            }
-        } else {
-            // quote! {
-            //     async fn create_test_table(database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestClient<#dbms>, random_seed: u32) -> Result<(), ::db_interfaces::errors::DatabaseError> {
-            //         let table_sql_path = <Self as ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms>>::FILE_PATH;
-            //         let mut create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ::db_interfaces::clickhouse::errors::ClickhouseError::SqlFileReadError(e.to_string()))?;
-
-            //         let db = <Self as ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms>>::DATABASE_NAME;
-            //         create_sql = create_sql.replace(&format!("{db}."), &format!("test_{db}."));
-            //         create_sql = create_sql.replace(&format!("'{db}'"), &format!("'test_{db}'"));
-
-            //         let table_type = <Self as ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms>>::TABLE_TYPE;
-            //         match table_type {
-            //             db_interfaces::clickhouse::tables::ClickhouseTableKind::Distributed => ::db_interfaces::Database::execute_remote(database, &create_sql, &()).await?,
-            //             _ => {
-            //                 create_sql = create_sql.replace(&format!("/{}", <Self as ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms>>::TABLE_NAME), &format!("/test{}/{}", random_seed, <Self as ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms>>::TABLE_NAME));
-
-            //                 ::db_interfaces::Database::execute_remote(&database.client, &create_sql, &()).await?;
-            //             }
-            //         }
-
-            //         Ok(())
-            //     }
-            // }
-            quote! ()
+            quote!()
         };
 
         let val = quote! {
@@ -140,21 +86,38 @@ impl RemoteClickhouseTableParse {
                 const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableKind = #table_type;
                 const TABLE_ENUM: #dbms = #dbms::#db_table_type;
                 type ClickhouseDataType = #data_type;
-            
+
                 #no_file_impls
             }
 
             ::db_interfaces::database_table!(#db_table_type, #data_type);
         };
 
+        #[cfg(feature = "test-utils")]
+        let no_file_impls_test = if table_path.is_none() {
+            quote! {
+                fn create_test_table(_database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestClient<#dbms>, _random_seed: u32)
+                     -> impl std::future::Future<Output = Result<(), ::db_interfaces::errors::DatabaseError>> {
+                    unreachable!("Not Enabled - No File Path Given In Macro");
+                    async {}
+                }
+            }
+        } else {
+            quote!()
+        };
 
+        #[cfg(feature = "test-utils")]
         let val_test = quote! {
             impl ::db_interfaces::clickhouse::test_utils::ClickhouseTestTable<#dbms> for #db_table_type {
                 #no_file_impls_test
             }
         };
 
-        Ok(quote!(#val  #val_test))
+        #[cfg(feature = "test-utils")]
+        return Ok(quote!(#val  #val_test));
+
+        #[cfg(not(feature = "test-utils"))]
+        return Ok(quote!(#val));
     }
 }
 
@@ -165,12 +128,13 @@ impl Parse for RemoteClickhouseTableParse {
             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table's dbms"))?;
         input.parse::<Token![,]>()?;
 
-
-
         let db_table_path;
         bracketed!(db_table_path in input);
 
-        let db_hierarchy = db_table_path.parse_terminated(Ident::parse, Token![,])?.into_iter().collect_vec();
+        let db_hierarchy = db_table_path
+            .parse_terminated(Ident::parse, Token![,])?
+            .into_iter()
+            .collect_vec();
 
         if db_hierarchy.len() < 2 {
             return Err(syn::Error::new(Span::call_site(), "database hierarchy must have at least 2 elements: [Database, Table]"));
@@ -208,21 +172,9 @@ impl Parse for RemoteClickhouseTableParse {
         }
 
         if !input.is_empty() {
-            return Err(syn::Error::new(
-                input.span(),
-                "There should be no values after the call function",
-            ));
+            return Err(syn::Error::new(input.span(), "There should be no values after the call function"));
         }
 
-        Ok(Self {
-            table_path,
-            dbms,
-            db_hierarchy,
-            data_type,
-            other_tables_needed,
-        })
+        Ok(Self { table_path, dbms, db_hierarchy, data_type, other_tables_needed })
     }
 }
-
-
-

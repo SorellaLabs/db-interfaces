@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use clickhouse::{query::Query, *};
 use eyre::Result;
 
-use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, tables::ClickhouseTable, types::ClickhouseQuery};
+use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]

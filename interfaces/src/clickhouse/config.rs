@@ -1,5 +1,4 @@
 use core::marker::PhantomData;
-use std::env;
 
 use clickhouse::Client;
 use hyper_tls::HttpsConnector;

@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 #[derive(Debug)]
 pub struct DatabaseError {
-    pub error: String,
+    pub error: String
 }
 
 impl Display for DatabaseError {

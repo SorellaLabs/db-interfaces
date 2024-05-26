@@ -1,7 +1,7 @@
 use alloy_primitives::{Address, FixedBytes};
+use clickhouse::query::Query;
 
 use crate::params::BindParameters;
-use clickhouse::query::Query;
 
 impl BindParameters for Address {
     fn bind_query(&self, query: Query) -> Query {

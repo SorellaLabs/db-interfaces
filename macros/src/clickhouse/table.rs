@@ -1,74 +1,30 @@
-// use syn::{parenthesized, parse::Parse, Expr, Ident, Token};
+use proc_macro2::{Span, TokenStream};
+use syn::{Ident, LitStr};
 
-// use crate::clickhouse::remote_table::RemoteClickhouseTableParse;
+use super::types::ClickhouseTableKind;
+use crate::clickhouse::{remote_table::RemoteClickhouseTableParse, utils::find_file_path};
 
-// #[derive(Clone)]
-// pub(crate) struct ClickhouseTableParse {
-//     /// required for all
-//     pub(crate) table_name:        Ident,
-//     /// required for all
-//     pub(crate) database_name:     String,
-//     /// required for all
-//     pub(crate) sub_database_name: Option<String>
-// }
+pub(crate) struct TableMeta {
+    pub(crate) table_name_str: String,
+    pub(crate) db_table_type:  Ident,
+    pub(crate) database_name:  String,
+    pub(crate) table_type:     TokenStream,
+    pub(crate) file_path:      LitStr
+}
 
-// impl ClickhouseTableParse {
-//     pub(crate) fn make_table_name_lowercase(&self) -> String {
-//         let mut table_name_str = self
-//             .table_name
-//             .to_string()
-//             .replace("Clickhouse", "")
-//             .replace("Local", "");
-//         table_name_str = add_underscore_and_lower(&table_name_str);
+impl TableMeta {
+    pub(crate) fn new(parsed: RemoteClickhouseTableParse, table_path: Option<&LitStr>) -> syn::Result<Self> {
+        let db_table_type = parsed.db_table_type();
 
-//         if let Some(sub_db_name) = self.sub_database_name.as_ref() {
-//             format!("`{}.{}`", sub_db_name, table_name_str).to_lowercase()
-//         } else {
-//             table_name_str
-//         }
-//     }
-// }
+        let table_name_str = parsed.table_name_string();
+        let database_name = parsed.database_name_string();
+        let file_path_str = find_file_path(&table_name_str, &database_name, table_path);
+        let file_path = LitStr::new(&file_path_str, Span::call_site());
 
-// impl Parse for ClickhouseTableParse {
-//     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
-//         let inner_tuple;
-//         parenthesized!(inner_tuple in input);
+        let table_type = ClickhouseTableKind::get_table_type(&file_path_str);
 
-//         let table_name: Ident = inner_tuple
-//             .parse()
-//             .map_err(|e| syn::Error::new(e.span(), "Failed to parse table
-// name"))?;
+        let this = Self { database_name, table_name_str, db_table_type, table_type: table_type.into(), file_path };
 
-//         let mut other_tables_needed = Vec::new();
-//         while inner_tuple.peek(Token![,]) {
-//             inner_tuple.parse::<Token![,]>()?;
-
-//             if !inner_tuple.peek(Ident) {
-//                 let content;
-//                 parenthesized!(content in inner_tuple);
-//                 let other_fields = content.parse_terminated(Expr::parse,
-// Token![,])?;
-
-//                 other_fields
-//                     .into_iter()
-//                     .for_each(|expr| other_tables_needed.push(expr));
-//             }
-//         }
-
-//         if !inner_tuple.is_empty() {
-//             return Err(syn::Error::new(inner_tuple.span(), "There should be
-// no values after the call function"));         }
-
-//         Ok(Self { table_name: table_name.clone(), database_name:
-// Default::default(), sub_database_name: None })     }
-// }
-
-// impl From<RemoteClickhouseTableParse> for ClickhouseTableParse {
-//     fn from(val: RemoteClickhouseTableParse) -> Self {
-//         ClickhouseTableParse {
-//             table_name:        val.table_name,
-//             database_name:     val.database_name.value(),
-//             sub_database_name: val.sub_database_name
-//         }
-//     }
-// }
+        Ok(this)
+    }
+}

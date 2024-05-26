@@ -15,7 +15,7 @@ pub enum ClickhouseError {
     #[error("error querying from the database: {0}")]
     QueryError(String),
     #[error("error reading sql file: {0}")]
-    SqlFileReadError(String),
+    SqlFileReadError(String)
 }
 
 impl From<std::io::Error> for ClickhouseError {
@@ -26,8 +26,6 @@ impl From<std::io::Error> for ClickhouseError {
 
 impl From<ClickhouseError> for DatabaseError {
     fn from(value: ClickhouseError) -> DatabaseError {
-        DatabaseError {
-            error: value.to_string(),
-        }
+        DatabaseError { error: value.to_string() }
     }
 }
