@@ -55,8 +55,6 @@ macro_rules! clickhouse_dbms {
     };
 
     (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
-        #[allow(clippy::manual_async_fn)]
-
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -154,8 +152,6 @@ macro_rules! clickhouse_dbms {
     };
 
     (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
-        #[allow(clippy::manual_async_fn)]
-
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -231,6 +227,7 @@ macro_rules! clickhouse_dbms {
                 })
             }
 
+            #[allow(clippy::manual_async_fn)]
             fn drop_test_db(&self, database: &::db_interfaces::clickhouse::test_utils::ClickhouseTestClient<Self>)
                  -> impl std::future::Future<Output = Result<(), ::db_interfaces::errors::DatabaseError>> + Send {
                 async move {
