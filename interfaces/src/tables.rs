@@ -8,6 +8,7 @@ pub trait DatabaseTable: Default + Send + Sync {
 #[macro_export]
 macro_rules! database_table {
     ($table_name:ident, $data_type:ty) => {
+        #[allow(non_camel_case_types)]
         #[derive(Debug, Clone, Default)]
         pub struct $table_name;
 
@@ -19,6 +20,7 @@ macro_rules! database_table {
     };
 
     ($table_name:ident) => {
+        #[allow(non_camel_case_types)]
         #[derive(Debug, Clone, Default)]
         pub struct $table_name;
 
