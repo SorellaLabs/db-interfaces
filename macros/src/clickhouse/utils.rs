@@ -22,7 +22,7 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if check_line(ln, table_name, database_name) {
+                    if check_line(ln.replace('`', ""), table_name, database_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
