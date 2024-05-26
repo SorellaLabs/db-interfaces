@@ -76,8 +76,8 @@ fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
     let formatted = ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()));
 
     let multi_period_formatted = ln
-        .replace('.', "")
-        .contains(&format!("{}{} ", database_name, table_name.to_lowercase()));
+        .replace('.', "_")
+        .contains(&format!("{}_{} ", database_name, table_name.to_lowercase()));
     let period_count_formatted = ln.chars().filter(|c| *c == '.').count() == 2;
 
     let remote = ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase()));
