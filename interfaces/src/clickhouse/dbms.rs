@@ -148,7 +148,7 @@ impl ClickhouseDBMS for NullDBMS {
     }
 
     fn from_database_table_str(_val: &str) -> Self {
-        Self::default()
+        Self
     }
 }
 

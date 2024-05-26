@@ -38,7 +38,7 @@ impl ClickhouseConfig {
             client = client.clone().with_database(db);
         }
 
-        ClickhouseClient { client, _phantom: PhantomData::default() }
+        ClickhouseClient { client, _phantom: PhantomData }
     }
 
     #[cfg(feature = "test-utils")]
