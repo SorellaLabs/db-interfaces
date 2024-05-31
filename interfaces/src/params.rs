@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use clickhouse::{query::Query, sql::Bind};
 use serde::Serialize;
 
-pub trait BindParameters: Send + Sync + Debug {
+pub trait BindParameters: Send + Sync {
     fn bind_query(&self, query: Query) -> Query;
 }
 
@@ -106,3 +106,9 @@ impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7,);
 impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8,);
 impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9,);
 impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15,);
+impl_tuple_bind_parameters!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16,);
