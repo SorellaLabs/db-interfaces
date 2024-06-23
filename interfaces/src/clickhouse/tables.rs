@@ -21,10 +21,10 @@ pub enum ClickhouseTableKind {
 }
 
 /// trait for different implementations of clickhouse tables
-//#[async_trait::async_trait]
-pub trait ClickhouseTable<D>: Send + Sync
+pub trait ClickhouseTable<D, E = ()>: Send + Sync
 where
-    D: ClickhouseDBMS + Send + Sync + 'static
+    D: ClickhouseDBMS + Send + Sync + 'static,
+    E: Send + Sync
 {
     const DATABASE_NAME: &'static str;
     const TABLE_NAME: &'static str;
@@ -35,7 +35,7 @@ where
     type ClickhouseDataType: ClickhouseInsert;
 
     /// creates the table and associated tables
-    fn create_table(database: &ClickhouseClient<D>) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send {
+    fn create_table(database: &ClickhouseClient<D, E>) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send {
         async {
             let table_sql_path = Self::FILE_PATH;
             let create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;

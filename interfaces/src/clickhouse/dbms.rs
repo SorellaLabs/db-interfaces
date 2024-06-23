@@ -3,14 +3,17 @@ use std::pin::Pin;
 use super::client::ClickhouseClient;
 use crate::errors::DatabaseError;
 
-pub trait ClickhouseDBMS: Sized + Sync + Send {
+pub trait ClickhouseDBMS<E = ()>: Sized + Sync + Send
+where
+    E: Send + Sync
+{
     const CLUSTER: Option<&'static str>;
 
     fn dependant_tables(&self) -> &[Self];
 
     fn create_table<'a>(
         &'a self,
-        database: &'a ClickhouseClient<Self>
+        database: &'a ClickhouseClient<Self, E>
     ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>>;
 
     fn all_tables() -> Vec<Self>;
@@ -285,15 +288,15 @@ impl ClickhouseDBMS for NullDBMS {
 
 #[cfg(feature = "test-utils")]
 impl crate::clickhouse::test_utils::ClickhouseTestDBMS for NullDBMS {
-    fn create_test_table<'a>(
+    fn create_test_table<'a, E>(
         &'a self,
-        _database: &'a crate::clickhouse::test_utils::ClickhouseTestClient<Self>,
+        _database: &'a crate::clickhouse::test_utils::ClickhouseTestClient<Self, E>,
         _random_seed: u32
     ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
         Box::pin(async { Ok(()) })
     }
 
-    async fn drop_test_db(&self, _database: &crate::clickhouse::test_utils::ClickhouseTestClient<Self>) -> Result<(), DatabaseError> {
+    async fn drop_test_db<E>(&self, _database: &crate::clickhouse::test_utils::ClickhouseTestClient<Self, E>) -> Result<(), DatabaseError> {
         Ok(())
     }
 

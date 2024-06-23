@@ -1,8 +1,8 @@
 use crate::clickhouse::types::ClickhouseInsert;
 
-pub trait DatabaseTable: Default + Send + Sync {
+pub trait DatabaseTable<EnumDBMS>: Default + Send + Sync {
     const NAME: &'static str;
-    type DataType: ClickhouseInsert;
+    type DataType: ClickhouseInsert + Into<EnumDBMS>;
 }
 
 #[macro_export]

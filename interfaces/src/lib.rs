@@ -17,13 +17,19 @@ use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;
 
-//#[async_trait::async_trait]
 pub trait Database: Sync + Send {
     type DBMS;
+    type EnumDBMS;
 
-    fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
+    fn insert_one<T: DatabaseTable<Self::EnumDBMS>>(
+        &self,
+        value: &T::DataType
+    ) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 
-    fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
+    fn insert_many<T: DatabaseTable<Self::EnumDBMS>>(
+        &self,
+        values: &[T::DataType]
+    ) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 
     fn query_one<Q: DatabaseQuery, P: BindParameters>(
         &self,

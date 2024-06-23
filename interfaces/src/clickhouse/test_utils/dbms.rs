@@ -4,13 +4,13 @@ use super::ClickhouseTestClient;
 use crate::{clickhouse::dbms::ClickhouseDBMS, errors::DatabaseError};
 
 pub trait ClickhouseTestDBMS: ClickhouseDBMS {
-    fn create_test_table<'a>(
+    fn create_test_table<'a, E>(
         &'a self,
-        database: &'a ClickhouseTestClient<Self>,
+        database: &'a ClickhouseTestClient<Self, E>,
         random_seed: u32
     ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>>;
 
-    fn drop_test_db(&self, database: &ClickhouseTestClient<Self>) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
+    fn drop_test_db<E>(&self, database: &ClickhouseTestClient<Self, E>) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 
     fn test_db_name(&self) -> String;
 }

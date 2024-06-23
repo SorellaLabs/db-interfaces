@@ -7,14 +7,15 @@ use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuer
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]
-pub struct ClickhouseClient<D> {
+pub struct ClickhouseClient<D, E = ()> {
     pub client:   Client,
-    pub _phantom: PhantomData<D>
+    pub _phantom: PhantomData<(D, E)>
 }
 
-impl<D> ClickhouseClient<D>
+impl<D, E> ClickhouseClient<D, E>
 where
-    D: ClickhouseDBMS + 'static
+    D: ClickhouseDBMS,
+    E: Send + Sync
 {
     pub fn credentials(&self) -> Credentials {
         self.client.credentials()
@@ -30,13 +31,15 @@ where
 }
 
 //#[async_trait::async_trait]
-impl<D> Database for ClickhouseClient<D>
+impl<D, E> Database for ClickhouseClient<D, E>
 where
-    D: ClickhouseDBMS
+    D: ClickhouseDBMS,
+    E: Sync + Send
 {
     type DBMS = D;
+    type EnumDBMS = E;
 
-    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
+    async fn insert_one<T: DatabaseTable<Self::EnumDBMS>>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
             .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())
@@ -55,7 +58,7 @@ where
         Ok(())
     }
 
-    async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
+    async fn insert_many<T: DatabaseTable<Self::EnumDBMS>>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
             .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())

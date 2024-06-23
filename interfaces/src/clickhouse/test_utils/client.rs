@@ -14,15 +14,16 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct ClickhouseTestClient<D> {
-    pub client: ClickhouseClient<D>
+pub struct ClickhouseTestClient<D, E = ()> {
+    pub client: ClickhouseClient<D, E>
 }
 
-impl<D> ClickhouseTestClient<D>
+impl<D, E> ClickhouseTestClient<D, E>
 where
-    D: ClickhouseTestDBMS + 'static
+    D: ClickhouseTestDBMS,
+    E: Send + Sync
 {
-    pub fn new_from_db(client: ClickhouseClient<D>) -> Self {
+    pub fn new_from_db(client: ClickhouseClient<D, E>) -> Self {
         Self { client }
     }
 
@@ -69,13 +70,15 @@ where
     }
 }
 
-impl<D> Database for ClickhouseTestClient<D>
+impl<D, E> Database for ClickhouseTestClient<D, E>
 where
-    D: ClickhouseTestDBMS + 'static
+    D: ClickhouseTestDBMS,
+    E: Send + Sync
 {
     type DBMS = D;
+    type EnumDBMS = E;
 
-    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
+    async fn insert_one<T: DatabaseTable<Self::EnumDBMS>>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
         let mut insert = self
             .client
@@ -96,7 +99,7 @@ where
         Ok(())
     }
 
-    async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
+    async fn insert_many<T: DatabaseTable<Self::EnumDBMS>>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
         let mut insert = self
             .client
