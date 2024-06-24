@@ -264,13 +264,13 @@ macro_rules! clickhouse_dbms {
             ),*
         }
 
-        $(
-            impl From<$table_type> for $dbms {
-                fn from(value: $table_type) -> $dbms {
-                    $dbms::$table($table_type)
-                }
-            }
-        )*
+        // $(
+        //     impl From<$table_type> for $dbms {
+        //         fn from(value: $table_type) -> $dbms {
+        //             $dbms::$table($table_type)
+        //         }
+        //     }
+        // )*
 
         clickhouse_dbms!(INTERNAL_WITH_ENUM, $dbms, None, [$($table,)*]);
     };
@@ -297,13 +297,13 @@ macro_rules! clickhouse_dbms {
             ),*
         }
 
-        $(
-            impl From<$table_type> for $dbms {
-                fn from(value: $table_type) -> $dbms {
-                    $dbms::$table(value)
-                }
-            }
-        )*
+        // $(
+        //     impl From<$table_type> for $dbms {
+        //         fn from(value: $table_type) -> $dbms {
+        //             $dbms::$table(value)
+        //         }
+        //     }
+        // )*
 
         clickhouse_dbms!(INTERNAL_WITH_ENUM, $dbms, Some($cluster), [$($table,)*]);
     };
