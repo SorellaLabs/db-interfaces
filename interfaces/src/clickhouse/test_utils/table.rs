@@ -31,7 +31,7 @@ where
                 database.client.execute_remote(&create_sql, &()).await?;
             }
 
-            for table in Self::CHILD_TABLES {
+            for table in Self::child_tables() {
                 table.create_test_table(database, random_seed).await?;
             }
 

@@ -32,7 +32,16 @@ extern crate proc_macro;
 /// remote_clickhouse_table!(DMBS, "db", Table, "path/to/table/dir");
 /// ```
 pub fn remote_clickhouse_table(input: TokenStream) -> TokenStream {
-    clickhouse::remote_table::remote_clickhouse_table(input.into())
+    clickhouse::remote_table::remote_clickhouse_table(input.into(), false)
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
+}
+
+#[proc_macro]
+/// this macro has the same functionality as the `remote_clickhouse_table!`
+/// macro, but is for tables belonging to a dbms with a value enum
+pub fn remote_clickhouse_table_value(input: TokenStream) -> TokenStream {
+    clickhouse::remote_table::remote_clickhouse_table(input.into(), true)
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
 }

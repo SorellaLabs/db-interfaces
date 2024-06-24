@@ -1,7 +1,7 @@
 use clickhouse::Row;
 use db_interfaces::{
     clickhouse::tables::{ClickhouseTable, ClickhouseTableKind},
-    clickhouse_dbms, remote_clickhouse_table
+    clickhouse_dbms, remote_clickhouse_table, remote_clickhouse_table_value
 };
 use serde::{Deserialize, Serialize};
 
@@ -43,15 +43,14 @@ macro_rules! clickhouse_table_test {
                 assert_eq!($struct_name::DATABASE_NAME, $database_name);
                 assert_eq!($struct_name::TABLE_NAME, $table_name);
                 assert_eq!($struct_name::FILE_PATH, clickhouse_table_dir);
-                assert_eq!($struct_name::CHILD_TABLES, [$(Dbms0::$child_tables),*]);
+                assert_eq!($struct_name::child_tables(), [$(Dbms0::$child_tables),*]);
                 assert_eq!($struct_name::TABLE_TYPE, ClickhouseTableKind::$table_type);
-                assert_eq!($struct_name::TABLE_ENUM, Dbms0::$table_enum);
             }
         }
     };
 }
 
-#[derive(Clone, Deserialize, Serialize, Row)]
+#[derive(Clone, Deserialize, Serialize, Row, Debug, PartialEq, Default)]
 pub struct Type0 {
     type0: String,
     type1: u64,
@@ -104,4 +103,55 @@ clickhouse_table_test!(
     (CHILD_TABLES | []),
     (TABLE_TYPE | ReplicatedReplacingMergeTree),
     (TABLE_ENUM | Database1Sub_Db0Table0_3)
+);
+
+clickhouse_dbms!(Dbms1, "cluster0", [[Database2Table1_0, String], [Database2Table1_1, Type0]]);
+remote_clickhouse_table_value!(Dbms1, [Database2, Table1_0], String, (Database2Table1_1), "tests/sql/tables/");
+remote_clickhouse_table_value!(Dbms1, [Database2, Table1_1], Type0, "tests/sql/tables/");
+
+macro_rules! clickhouse_table_value_dbms_test {
+    (
+    ( $struct_name:ident ),
+    (DATABASE_NAME | $database_name:expr),
+    (TABLE_NAME | $table_name:expr),
+    (FILE_PATH | $file_path:expr),
+    (CHILD_TABLES | [$($child_tables:ident),*]),
+    (TABLE_TYPE | $table_type:ident),
+    (TABLE_ENUM | $table_enum:ident)
+    ) => {
+        paste::paste! {
+            #[allow(non_snake_case)]
+            #[test]
+            fn [<test_ $database_name _ $struct_name>]() {
+                let root_path = workspace_dir();
+                let clickhouse_table_dir = format!("{root_path}{}", $file_path);
+
+                assert_eq!($struct_name::DATABASE_NAME, $database_name);
+                assert_eq!($struct_name::TABLE_NAME, $table_name);
+                assert_eq!($struct_name::FILE_PATH, clickhouse_table_dir);
+                assert_eq!($struct_name::child_tables(), [$(Dbms1::$child_tables(Default::default())),*]);
+                assert_eq!($struct_name::TABLE_TYPE, ClickhouseTableKind::$table_type);
+            }
+        }
+    };
+}
+
+clickhouse_table_value_dbms_test!(
+    (Database2Table1_0),
+    (DATABASE_NAME | "database2"),
+    (TABLE_NAME | "table1_0"),
+    (FILE_PATH | "/tests/sql/tables/table1_0.sql"),
+    (CHILD_TABLES | [Database2Table1_1]),
+    (TABLE_TYPE | AggregatingMergeTree),
+    (TABLE_ENUM | Database2Table1_0)
+);
+
+clickhouse_table_value_dbms_test!(
+    (Database2Table1_1),
+    (DATABASE_NAME | "database2"),
+    (TABLE_NAME | "table1_1"),
+    (FILE_PATH | "/tests/sql/tables/table1_1.sql"),
+    (CHILD_TABLES | []),
+    (TABLE_TYPE | AggregatingMergeTree),
+    (TABLE_ENUM | Database2Table1_1)
 );

@@ -29,9 +29,9 @@ where
     const DATABASE_NAME: &'static str;
     const TABLE_NAME: &'static str;
     const FILE_PATH: &'static str;
-    const CHILD_TABLES: &'static [D];
+    //    const CHILD_TABLES: &'static [D];
     const TABLE_TYPE: ClickhouseTableKind;
-    const TABLE_ENUM: D;
+    //const TABLE_ENUM: D;
     type ClickhouseDataType: ClickhouseInsert;
 
     /// creates the table and associated tables
@@ -41,7 +41,7 @@ where
             let create_sql = std::fs::read_to_string(table_sql_path).map_err(|e| ClickhouseError::SqlFileReadError(e.to_string()))?;
             database.execute_remote(&create_sql, &()).await?;
 
-            for table in Self::CHILD_TABLES {
+            for table in Self::child_tables() {
                 table.create_table(database).await?;
             }
 
@@ -58,4 +58,7 @@ where
     fn full_name() -> String {
         format!("{}.{}", Self::DATABASE_NAME, Self::TABLE_NAME)
     }
+
+    /// child tables
+    fn child_tables() -> Vec<D>;
 }

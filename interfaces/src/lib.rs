@@ -1,4 +1,5 @@
 #![feature(associated_type_defaults)]
+#![feature(const_trait_impl)]
 
 pub mod clickhouse;
 pub mod errors;
@@ -12,7 +13,7 @@ pub mod alloy_types;
 pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
-pub use db_interfaces_macros::remote_clickhouse_table;
+pub use db_interfaces_macros::{remote_clickhouse_table, remote_clickhouse_table_value};
 use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;

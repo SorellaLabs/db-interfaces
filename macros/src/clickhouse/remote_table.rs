@@ -5,9 +5,9 @@ use syn::{bracketed, parenthesized, parse::Parse, token, Expr, Ident, LitStr, To
 
 use super::table::TableMeta;
 
-pub(crate) fn remote_clickhouse_table(token_stream: TokenStream) -> syn::Result<TokenStream> {
+pub(crate) fn remote_clickhouse_table(token_stream: TokenStream, value_dbms: bool) -> syn::Result<TokenStream> {
     let parsed: RemoteClickhouseTableParse = syn::parse2(token_stream)?;
-    let token_stream = parsed.to_token_stream()?;
+    let token_stream = parsed.to_token_stream(value_dbms)?;
 
     Ok(token_stream)
 }
@@ -52,7 +52,7 @@ impl RemoteClickhouseTableParse {
 }
 
 impl RemoteClickhouseTableParse {
-    fn to_token_stream(self) -> syn::Result<TokenStream> {
+    fn to_token_stream(self, value_dbms: bool) -> syn::Result<TokenStream> {
         let this = self.clone();
         let RemoteClickhouseTableParse { table_path, dbms, data_type, other_tables_needed, .. } = self;
         let other_tables_needed = other_tables_needed
@@ -62,8 +62,7 @@ impl RemoteClickhouseTableParse {
 
         let TableMeta { table_name_str, db_table_type, database_name, table_type, file_path } = TableMeta::new(this, table_path.as_ref())?;
 
-        let (table_name_str, db_table_type, table_type, file_path, other_tables_needed) =
-            (table_name_str, db_table_type, table_type, file_path.into_token_stream(), quote!(&[#(#dbms::#other_tables_needed),*]));
+        let (table_name_str, db_table_type, table_type, file_path) = (table_name_str, db_table_type, table_type, file_path.into_token_stream());
 
         let no_file_impls = if table_path.is_none() {
             quote! {
@@ -77,20 +76,35 @@ impl RemoteClickhouseTableParse {
             quote!()
         };
 
+        let other_tables_needed = if value_dbms {
+            quote!(vec![#(#dbms::#other_tables_needed(Default::default())),*])
+        } else {
+            quote!(vec![#(#dbms::#other_tables_needed),*])
+        };
+
+        let database_table_macro = if value_dbms {
+            quote!(::db_interfaces::database_table!(VALUE_ENUM | #db_table_type, #data_type, #dbms);)
+        } else {
+            quote!(::db_interfaces::database_table!(SIMPLE_ENUM | #db_table_type, #data_type, #dbms);)
+        };
+
         let val = quote! {
+            #[feature(const_trait_impl)]
             impl ::db_interfaces::clickhouse::tables::ClickhouseTable<#dbms> for #db_table_type {
                 const DATABASE_NAME: &'static str = #database_name;
                 const TABLE_NAME: &'static str = #table_name_str;
                 const FILE_PATH: &'static str = #file_path;
-                const CHILD_TABLES: &'static [#dbms] = #other_tables_needed;
                 const TABLE_TYPE: db_interfaces::clickhouse::tables::ClickhouseTableKind = #table_type;
-                const TABLE_ENUM: #dbms = #dbms::#db_table_type;
                 type ClickhouseDataType = #data_type;
 
                 #no_file_impls
+
+                fn child_tables() -> Vec<#dbms> {
+                    #other_tables_needed
+                }
             }
 
-            ::db_interfaces::database_table!(#db_table_type, #data_type);
+            #database_table_macro
         };
 
         #[cfg(feature = "test-utils")]
