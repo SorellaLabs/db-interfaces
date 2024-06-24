@@ -12,19 +12,18 @@ pub mod alloy_types;
 //#[cfg(feature = "test-utils")]
 pub mod test_utils;
 
-use clickhouse::types::ClickhouseQuery;
+use clickhouse::{dbms::NullDBMS, types::ClickhouseQuery};
 pub use db_interfaces_macros::{remote_clickhouse_table, remote_clickhouse_table_value};
 use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;
 
-//#[async_trait::async_trait]
-pub trait Database: Sync + Send {
+pub trait Database<D = NullDBMS>: Sync + Send {
     type DBMS;
 
-    fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
+    fn insert_one<T: DatabaseTable<DBMS = D>>(&self, value: &T::DataType) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 
-    fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
+    fn insert_many<T: DatabaseTable<DBMS = D>>(&self, values: &[T::DataType]) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 
     fn query_one<Q: DatabaseQuery, P: BindParameters>(
         &self,
