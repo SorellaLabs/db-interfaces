@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::DatabaseQuery;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize, Row)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Row, Hash, PartialEq)]
 pub struct NoneType();
 
 pub trait ClickhouseInsert: Serialize + InsertRow + Send + Sync + 'static + DynClone + Sized {}
