@@ -112,12 +112,13 @@ impl RemoteClickhouseTableParse {
                 #no_file_impls_test
             }
         };
-
-        #[cfg(feature = "test-utils")]
-        return Ok(quote!(#val  #val_test))
-
-        #[cfg(not(feature = "test-utils"))]
-        return Ok(quote!(#val))
+        if cfg!(feature = "test-utils") {
+            return Ok(quote!(#val  #val_test))
+        } else if cfg!(not(feature = "test-utils")) {
+            return Ok(quote!(#val))
+        } else {
+            panic!("features not setup")
+        }
     }
 }
 
