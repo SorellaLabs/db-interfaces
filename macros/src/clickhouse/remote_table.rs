@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{bracketed, parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token};
+use syn::{bracketed, parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token, TypePath};
 
 use super::table::TableMeta;
 
@@ -114,10 +114,10 @@ impl RemoteClickhouseTableParse {
         };
 
         #[cfg(feature = "test-utils")]
-        return Ok(quote!(#val  #val_test));
+        return Ok(quote!(#val  #val_test))
 
         #[cfg(not(feature = "test-utils"))]
-        return Ok(quote!(#val));
+        return Ok(quote!(#val))
     }
 }
 
@@ -137,12 +137,12 @@ impl Parse for RemoteClickhouseTableParse {
             .collect_vec();
 
         if db_hierarchy.len() < 2 {
-            return Err(syn::Error::new(Span::call_site(), "database hierarchy must have at least 2 elements: [Database, Table]"));
+            return Err(syn::Error::new(Span::call_site(), "database hierarchy must have at least 2 elements: [Database, Table]"))
         }
 
-        let data_type = if input.peek2(syn::Ident) {
+        let data_type = if input.peek3(Token![,]) {
             input.parse::<Token![,]>()?;
-            let dt_ident: Ident = input
+            let dt_ident: TypePath = input
                 .parse()
                 .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
             quote!(#dt_ident)
@@ -172,7 +172,7 @@ impl Parse for RemoteClickhouseTableParse {
         }
 
         if !input.is_empty() {
-            return Err(syn::Error::new(input.span(), "There should be no values after the call function"));
+            return Err(syn::Error::new(input.span(), "There should be no values after the call function"))
         }
 
         Ok(Self { table_path, dbms, db_hierarchy, data_type, other_tables_needed })
