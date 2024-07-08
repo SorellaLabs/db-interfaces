@@ -1,4 +1,4 @@
-use clickhouse::Row;
+use clickhouse::{DbRow, Row};
 use db_interfaces::{
     clickhouse::tables::{ClickhouseTable, ClickhouseTableKind},
     clickhouse_dbms, remote_clickhouse_table
@@ -58,13 +58,21 @@ pub struct Type0 {
     type2: f64
 }
 
+#[derive(Clone, Serialize, Row)]
+pub struct TypeGeneric<T: Clone + Serialize + DbRow> {
+    #[serde(flatten)]
+    inner: T,
+    id:    u64
+}
+
 // Table0_1, Table0_2, Table0_3
-clickhouse_dbms!(Dbms0, "cluster0", [Database0Table0_0, Database1Table0_1, Database1Table0_2, Database1Sub_Db0Table0_3]);
+clickhouse_dbms!(Dbms0, "cluster0", [Database0Table0_0, Database1Table0_1, Database1Table0_2, Database1Sub_Db0Table0_3, Database1Sub_Db0Table0_4]);
 
 remote_clickhouse_table!(Dbms0, [Database0, Table0_0], String, "tests/sql/tables/");
 remote_clickhouse_table!(Dbms0, [Database1, Table0_1], Type0, (Database0Table0_0), "tests/sql/tables/");
 remote_clickhouse_table!(Dbms0, [Database1, Table0_2], "tests/sql/tables/");
 remote_clickhouse_table!(Dbms0, [Database1, Sub_Db0, Table0_3], Type0, "tests/sql/tables/");
+remote_clickhouse_table!(Dbms0, [Database1, Sub_Db0, Table0_4], TypeGeneric<Type0>, "tests/sql/tables/");
 
 clickhouse_table_test!(
     (Database0Table0_0),

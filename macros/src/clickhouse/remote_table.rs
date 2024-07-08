@@ -1,7 +1,7 @@
 use itertools::Itertools;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{bracketed, parenthesized, parse::Parse, token, Expr, Ident, LitStr, Token, TypePath};
+use syn::{bracketed, parenthesized, parse::Parse, token, Expr, LitStr, Token, Type};
 
 use super::table::TableMeta;
 
@@ -141,15 +141,16 @@ impl Parse for RemoteClickhouseTableParse {
             return Err(syn::Error::new(Span::call_site(), "database hierarchy must have at least 2 elements: [Database, Table]"))
         }
 
-        let data_type = if input.peek3(Token![,]) {
+        let data_type = if input.peek2(syn::Ident) {
             input.parse::<Token![,]>()?;
-            let dt_ident: TypePath = input
+            let dt_ident: Type = input
                 .parse()
                 .map_err(|e| syn::Error::new(e.span(), "Failed to parse data type"))?;
             quote!(#dt_ident)
         } else {
             quote!(db_interfaces::clickhouse::types::NoneType)
         };
+        // panic!("{}", data_type.to_string());
 
         let mut other_tables_needed = Vec::new();
         let mut table_path = None;
