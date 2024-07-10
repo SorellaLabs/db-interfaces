@@ -33,7 +33,7 @@ where
         unreachable!("cannot insert on shared buffered clickhouse client");
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Q, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -47,7 +47,7 @@ where
     async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: &P
+        params: P
     ) -> Result<Option<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
@@ -59,7 +59,7 @@ where
         Ok(res)
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -70,7 +70,7 @@ where
         Ok(res)
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<u8>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
         query
             .fetch_raw::<Q>()
@@ -78,7 +78,7 @@ where
             .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))
     }
 
-    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<(), DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         query
@@ -151,7 +151,7 @@ where
         Ok(())
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Q, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -165,7 +165,7 @@ where
     async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: &P
+        params: P
     ) -> Result<Option<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
@@ -177,7 +177,7 @@ where
         Ok(res)
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -188,7 +188,7 @@ where
         Ok(res)
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<u8>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
         query
             .fetch_raw::<Q>()
@@ -196,7 +196,7 @@ where
             .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))
     }
 
-    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<(), DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         query
