@@ -28,31 +28,31 @@ pub trait Database: Sync + Send {
     fn query_one<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> impl std::future::Future<Output = Result<Q, DatabaseError>> + Send;
 
     fn query_one_optional<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> impl std::future::Future<Output = Result<Option<Q>, DatabaseError>> + Send;
 
     fn query_many<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> impl std::future::Future<Output = Result<Vec<Q>, DatabaseError>> + Send;
 
     fn query_raw<Q: DatabaseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> impl std::future::Future<Output = Result<Vec<u8>, DatabaseError>> + Send;
 
     fn execute_remote<P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> impl std::future::Future<Output = Result<(), DatabaseError>> + Send;
 }
 

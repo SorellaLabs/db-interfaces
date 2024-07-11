@@ -119,7 +119,7 @@ where
         Ok(())
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
         let query: String = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one(&query, params).await
@@ -128,25 +128,25 @@ where
     async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
-        params: P
+        params: &P
     ) -> Result<Option<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one_optional(&query, params).await
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_many(&query, params).await
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
         self.client.query_raw::<Q, P>(&query, params).await
     }
 
-    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: P) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.execute_remote(&query, params).await
