@@ -1,6 +1,7 @@
 #![feature(associated_type_defaults)]
 
 pub mod clickhouse;
+pub mod postgres;
 pub mod errors;
 pub mod params;
 pub mod tables;
