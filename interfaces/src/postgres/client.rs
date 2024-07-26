@@ -66,14 +66,9 @@ where
             .await
             .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))?;
 
-        if let Some(row) = row {
-            let res = row
-                .try_get::<usize, R>(0)
-                .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))?;
-            Ok(Some(res))
-        } else {
-            Ok(None)
-        }
+        row.map(|r| r.try_get::<usize, R>(0))
+            .transpose()
+            .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))
     }
 
     async fn query_many<R: PostgresResult>(&self, query: &impl PostgresQuery, params: &[&(dyn ToSql + Sync)]) -> Result<Vec<R>, DatabaseError> {
