@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use postgres::Client;
+use tokio_postgres::Client;
 use hyper_tls::HttpsConnector;
 
 use super::{client::PostgresClient, dbms::PostgresDBMS};
