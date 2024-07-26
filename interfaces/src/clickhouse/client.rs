@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 use clickhouse::{query::Query, *};
 use eyre::Result;
 
-use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery};
-use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
+use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, params::BindClickhouseParameters, types::ClickhouseQuery};
+use crate::{errors::DatabaseError, Database, DatabaseTable};
 
 #[derive(Clone)]
 pub struct ClickhouseClient<D> {
@@ -29,7 +29,6 @@ where
     }
 }
 
-//#[async_trait::async_trait]
 impl<D> Database for ClickhouseClient<D>
 where
     D: ClickhouseDBMS
@@ -76,7 +75,11 @@ where
         Ok(())
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindClickhouseParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Q, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -87,7 +90,7 @@ where
         Ok(res)
     }
 
-    async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
+    async fn query_one_optional<Q: ClickhouseQuery, P: BindClickhouseParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P
@@ -102,7 +105,11 @@ where
         Ok(res)
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindClickhouseParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Vec<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         let res = query
@@ -113,7 +120,11 @@ where
         Ok(res)
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindClickhouseParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Vec<u8>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
         query
             .fetch_raw::<Q>()
@@ -121,7 +132,7 @@ where
             .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))
     }
 
-    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindClickhouseParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
         query

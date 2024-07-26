@@ -6,7 +6,7 @@ use rand::Rng;
 
 use super::ClickhouseTestDBMS;
 use crate::{
-    clickhouse::{client::ClickhouseClient, errors::ClickhouseError, types::ClickhouseQuery},
+    clickhouse::{client::ClickhouseClient, errors::ClickhouseError, params::BindClickhouseParameters, types::ClickhouseQuery},
     errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
@@ -119,13 +119,17 @@ where
         Ok(())
     }
 
-    async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
+    async fn query_one<Q: ClickhouseQuery, P: BindClickhouseParameters + BindParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Q, DatabaseError> {
         let query: String = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_one(&query, params).await
     }
 
-    async fn query_one_optional<Q: ClickhouseQuery, P: BindParameters>(
+    async fn query_one_optional<Q: ClickhouseQuery, P: BindClickhouseParameters + BindParameters>(
         &self,
         query: impl AsRef<str> + Send,
         params: &P
@@ -135,18 +139,30 @@ where
         self.client.query_one_optional(&query, params).await
     }
 
-    async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
+    async fn query_many<Q: ClickhouseQuery, P: BindClickhouseParameters + BindParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Vec<Q>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.query_many(&query, params).await
     }
 
-    async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: ClickhouseQuery, P: BindClickhouseParameters + BindParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<Vec<u8>, DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
         self.client.query_raw::<Q, P>(&query, params).await
     }
 
-    async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
+    async fn execute_remote<P: BindClickhouseParameters + BindParameters>(
+        &self,
+        query: impl AsRef<str> + Send,
+        params: &P
+    ) -> Result<(), DatabaseError> {
         let query = <Self as TestDatabase<D>>::modify_query_str(query.as_ref());
 
         self.client.execute_remote(&query, params).await
