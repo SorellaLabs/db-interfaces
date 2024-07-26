@@ -11,8 +11,10 @@ pub mod alloy_types;
 //#[cfg(feature = "test-utils")]
 pub mod test_utils;
 
+pub use ::clickhouse::Row;
+pub use ::postgres_types::{FromSql, ToSql};
 use clickhouse::types::ClickhouseQuery;
-pub use db_interfaces_macros::remote_clickhouse_table;
+pub use db_interfaces_macros::{db_interface, remote_clickhouse_table};
 use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;

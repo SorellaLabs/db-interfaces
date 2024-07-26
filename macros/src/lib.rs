@@ -3,9 +3,8 @@
 #![doc(test(no_crate_inject, attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))))]
 #![allow(clippy::wrong_self_convention)]
 
-use proc_macro::TokenStream;
-
 mod clickhouse;
+mod derive_all;
 
 #[allow(unused_extern_crates)]
 extern crate proc_macro;
@@ -31,8 +30,17 @@ extern crate proc_macro;
 /// remote_clickhouse_table!(DMBS, "db", Table, TableInsertType, (LocalRelays), "path/to/table/dir");
 /// remote_clickhouse_table!(DMBS, "db", Table, "path/to/table/dir");
 /// ```
-pub fn remote_clickhouse_table(input: TokenStream) -> TokenStream {
+pub fn remote_clickhouse_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     clickhouse::remote_table::remote_clickhouse_table(input.into())
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
+}
+
+/// macro that implements the necessary traits for the [Database] trait
+#[proc_macro_attribute]
+pub fn db_interface(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    //let item = parse_macro_input!(item as ItemFn);
+    derive_all::derive_all(item.into(), attr.into())
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
 }

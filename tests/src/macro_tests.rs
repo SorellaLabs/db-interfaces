@@ -1,7 +1,7 @@
 use clickhouse::{DbRow, Row};
 use db_interfaces::{
     clickhouse::tables::{ClickhouseTable, ClickhouseTableKind},
-    clickhouse_dbms, remote_clickhouse_table
+    clickhouse_dbms, db_interface, remote_clickhouse_table
 };
 use serde::{Deserialize, Serialize};
 
@@ -113,3 +113,10 @@ clickhouse_table_test!(
     (TABLE_TYPE | ReplicatedReplacingMergeTree),
     (TABLE_ENUM | Database1Sub_Db0Table0_3)
 );
+
+#[db_interface]
+#[derive(Clone, Debug, Serialize, Default)]
+pub struct TypeGeneric2 {
+    this: f64,
+    id:   u32
+}
