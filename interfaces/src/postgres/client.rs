@@ -1,11 +1,14 @@
 use std::marker::PhantomData;
 
+use alloy_primitives::bytes::BytesMut;
 use tokio_postgres::*;
 use eyre::Result;
 use types::{FromSql, ToSql};
 
 use super::{dbms::PostgresDBMS, errors::PostgresError, types::{PostgresQuery, PostgresResult}};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable, PostgresDatabaseTable};
+
+use futures::TryStreamExt;
 
 pub struct PostgresClient<D> {
     pub client:   Client,
@@ -86,19 +89,24 @@ where
             .collect()
     }
 
-    async fn query_raw<Q: PostgresResult>(&self, query: &impl PostgresQuery, params: &[&(dyn ToSql + Sync)]) -> Result<Vec<u8>, DatabaseError> {
-        let rows = self
+    async fn query_raw<Q: PostgresResult>(&self, query: &impl PostgresQuery, params: &&[&(dyn ToSql + Sync)]) -> Result<Vec<u8>, DatabaseError> {
+        let row_stream = self
             .client
             .query_raw(query, params.iter())
             .await
             .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))?;
-
-        rows
-            .fetch_raw::<Q>()
+    
+        let mut buffer = BytesMut::new();
+        row_stream
+            .try_for_each(|row| {
+                buffer.extend_from_slice(&row);
+                futures::future::ready(Ok(()))
+            })
             .await
-            .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))
+            .map_err(|e| DatabaseError::from(PostgresError::QueryError(e.to_string())))?;
+    
+        Ok(buffer.freeze().to_vec())
     }
-
     async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
         Ok(())
     }
