@@ -89,7 +89,7 @@ where
             .collect()
     }
 
-    async fn query_raw<Q: PostgresResult>(&self, query: &impl PostgresQuery, params: &&[&(dyn ToSql + Sync)]) -> Result<Vec<u8>, DatabaseError> {
+    async fn query_raw<Q: PostgresResult>(&self, query: &impl PostgresQuery, params: &[&(dyn ToSql + Sync)]) -> Result<Vec<u8>, DatabaseError> {
         let row_stream = self
             .client
             .query_raw(query, params.iter())

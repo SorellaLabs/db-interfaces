@@ -1,14 +1,11 @@
+use tokio_postgres::ToStatement;
+
 use crate::clickhouse::types::ClickhouseInsert;
 use crate::postgres::types::PostgresInsert;
 
 pub trait DatabaseTable: Default + Send + Sync {
     const NAME: &'static str;
-    type DataType: ClickhouseInsert;
-}
-
-pub trait PostgresDatabaseTable: Default + Send + Sync {
-    const NAME: &'static str;
-    type DataType: PostgresInsert;
+    type DataType: ClickhouseInsert + PostgresInsert;
 }
 
 #[macro_export]

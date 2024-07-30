@@ -4,6 +4,9 @@
 #![allow(clippy::wrong_self_convention)]
 
 use proc_macro::TokenStream;
+use syn::{Data, DeriveInput, Fields};
+
+use quote::quote;
 
 mod clickhouse;
 
@@ -35,4 +38,37 @@ pub fn remote_clickhouse_table(input: TokenStream) -> TokenStream {
     clickhouse::remote_table::remote_clickhouse_table(input.into())
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
+}
+
+#[proc_macro_derive(Insertable)]
+pub fn insert_formatter(input: TokenStream) -> TokenStream {
+    // Parse the input tokens into a DeriveInput
+    let input = syn::parse_macro_input!(input as DeriveInput);
+
+    // Get the name of the struct
+    let name = input.ident;
+
+    // Match on the data of the struct
+    let fields = match input.data {
+        Data::Struct(data) => data.fields,
+        _ => panic!("Insertable can only be used with structs"),
+    };
+
+    // Collect field names
+    let field_names: Vec<_> = match fields {
+        Fields::Named(fields) => fields.named.into_iter().map(|f| f.ident.clone()).collect(),
+        _ => panic!("Insertable only supports named fields"),
+    };
+
+    // Generate code
+    let expanded = quote! {
+        impl #name  {
+            pub fn print_fields() {
+                #(println!("{}", stringify!(#field_names));)*
+            }
+        }
+    };
+
+    // Convert the generated code into a TokenStream and return it
+    TokenStream::from(expanded)
 }
