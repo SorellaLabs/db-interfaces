@@ -1,5 +1,3 @@
-use tokio_postgres::ToStatement;
-
 use crate::clickhouse::types::ClickhouseInsert;
 use crate::postgres::types::PostgresInsert;
 
