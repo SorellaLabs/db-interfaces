@@ -2,14 +2,14 @@ use std::marker::PhantomData;
 
 use alloy_primitives::bytes::BytesMut;
 use eyre::Result;
-use sqlx::{Encode, Pool, Type};
+use sqlx::{query, query_as_unchecked, query_builder, query_with, Encode, Pool, Type};
 
 use super::{dbms::PostgresDBMS, errors::PostgresError, types::{PostgresParam, PostgresQuery, PostgresResult}};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 use futures::TryStreamExt;
 
-pub struct PostgresClient<D> {
+pub struct PostgresClient<D: PostgresDBMS> {
     pub pool:     Pool<D>,
     pub _phantom: PhantomData<D>,
 }
@@ -43,9 +43,9 @@ where
     async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         Ok(())
     }
-
-    async fn query_one<'args, R: PostgresResult>(&self, query: &str, params: &[&dyn PostgresParam<D>]) -> Result<R, DatabaseError> {
-        let mut query: sqlx::query::Query<_, _> = sqlx::query(query);
+    async fn query_one<Q: PostgresQuery>(&self, params: &Q::ParamType) -> Result<R, DatabaseError> {
+        let mut query = sqlx::query(Q::QUERY);
+        query.bind(value)
         for param in params {
             query = query.bind(param);
         }

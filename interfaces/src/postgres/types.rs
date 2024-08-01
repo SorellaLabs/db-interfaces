@@ -10,8 +10,11 @@ pub struct NoneType();
 pub trait PostgresInsert: Send + Sync + 'static + DynClone + Sized {}
 //impl<T> PostgresInsert for T where T: Serialize + InsertRow + Send + Sync + 'static + DynClone + Sized {}
 
-pub trait PostgresQuery {}
-impl<T> PostgresQuery for T {}
+pub trait PostgresQuery {
+    const QUERY: &'static str;
+    type ResultType: PostgresResult;
+    type ParamType;
+}
 
 pub trait PostgresParam<D> {}
 impl<T, D> PostgresParam<D> for T where T: for<'args> Encode<'args, D> + Type<D>, D: Database {}

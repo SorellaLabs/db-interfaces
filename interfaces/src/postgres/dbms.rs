@@ -3,7 +3,7 @@ use std::pin::Pin;
 use super::client::PostgresClient;
 use crate::errors::DatabaseError;
 
-pub trait PostgresDBMS: Sized + Sync + Send {
+pub trait PostgresDBMS: Sized + Sync + Send + sqlx::Database {
     const CLUSTER: Option<&'static str>;
 
     fn dependant_tables(&self) -> &[Self];
