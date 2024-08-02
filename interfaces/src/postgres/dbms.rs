@@ -254,50 +254,50 @@ macro_rules! postgres_dbms {
 #[derive(Debug, Default, Clone)]
 pub struct NullDBMS;
 
-impl PostgresDBMS for NullDBMS {
-    const CLUSTER: Option<&'static str> = None;
+// impl PostgresDBMS for NullDBMS {
+//     const CLUSTER: Option<&'static str> = None;
 
-    fn dependant_tables(&self) -> &[Self] {
-        &[]
-    }
+//     fn dependant_tables(&self) -> &[Self] {
+//         &[]
+//     }
 
-    fn create_table(&self, _database: &PostgresClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
-        Box::pin(async { Ok(()) })
-    }
+//     fn create_table(&self, _database: &PostgresClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
+//         Box::pin(async { Ok(()) })
+//     }
 
-    fn all_tables() -> Vec<Self> {
-        Vec::new()
-    }
+//     fn all_tables() -> Vec<Self> {
+//         Vec::new()
+//     }
 
-    /// <DB NAME>.<TABLE NAME>
-    fn full_name(&self) -> String {
-        String::new()
-    }
+//     /// <DB NAME>.<TABLE NAME>
+//     fn full_name(&self) -> String {
+//         String::new()
+//     }
 
-    fn db_name(&self) -> String {
-        String::new()
-    }
+//     fn db_name(&self) -> String {
+//         String::new()
+//     }
 
-    fn from_database_table_str(_val: &str) -> Self {
-        Self
-    }
-}
+//     fn from_database_table_str(_val: &str) -> Self {
+//         Self
+//     }
+// }
 
-#[cfg(feature = "test-utils")]
-impl crate::postgres::test_utils::PostgresTestDBMS for NullDBMS {
-    fn create_test_table<'a>(
-        &'a self,
-        _database: &'a crate::postgres::test_utils::PostgresTestClient<Self>,
-        _random_seed: u32
-    ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
-        Box::pin(async { Ok(()) })
-    }
+// #[cfg(feature = "test-utils")]
+// impl crate::postgres::test_utils::PostgresTestDBMS for NullDBMS {
+//     fn create_test_table<'a>(
+//         &'a self,
+//         _database: &'a crate::postgres::test_utils::PostgresTestClient<Self>,
+//         _random_seed: u32
+//     ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
+//         Box::pin(async { Ok(()) })
+//     }
 
-    async fn drop_test_db(&self, _database: &crate::postgres::test_utils::PostgresTestClient<Self>) -> Result<(), DatabaseError> {
-        Ok(())
-    }
+//     async fn drop_test_db(&self, _database: &crate::postgres::test_utils::PostgresTestClient<Self>) -> Result<(), DatabaseError> {
+//         Ok(())
+//     }
 
-    fn test_db_name(&self) -> String {
-        String::new()
-    }
-}
+//     fn test_db_name(&self) -> String {
+//         String::new()
+//     }
+// }

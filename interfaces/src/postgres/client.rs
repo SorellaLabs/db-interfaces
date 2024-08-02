@@ -9,6 +9,7 @@ use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTab
 
 use futures::TryStreamExt;
 
+#[derive(Clone)]
 pub struct PostgresClient<D: PostgresDBMS> {
     pub pool:     Pool<D>,
     pub _phantom: PhantomData<D>,
@@ -43,16 +44,17 @@ where
     async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         Ok(())
     }
-    async fn query_one<Q: PostgresQuery>(&self, params: &Q::ParamType) -> Result<R, DatabaseError> {
-        let mut query = sqlx::query(Q::QUERY);
-        query.bind(value)
-        for param in params {
-            query = query.bind(param);
-        }
-        
-        let res = query.execute(self.pool).await?;
 
-        Ok(res)
+    async fn query_one<Q: PostgresQuery>(&self, params: &Q::ParamType) -> Result<(), DatabaseError> {
+        // let mut query = sqlx::query(Q::QUERY);
+        // query.bind(value)
+        // for param in params {
+        //     query = query.bind(param);
+        // }
+        
+        // let res = query.execute(self.pool).await?;
+
+        Ok(())
     }
 
     // async fn query_one_optional<R: PostgresResult>(
@@ -107,4 +109,16 @@ where
     // async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
     //     Ok(())
     // }
+
+    pub async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
+        // let query = params.bind_query(self.client.query(query.as_ref()));
+
+        // query
+        //     .execute()
+        //     .await
+        //     .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
+
+        Ok(())
+    }
+
 }

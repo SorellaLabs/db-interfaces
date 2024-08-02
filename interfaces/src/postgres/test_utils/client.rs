@@ -6,15 +6,12 @@ use rand::Rng;
 
 use super::PostgresTestDBMS;
 use crate::{
-    postgres::{client::PostgresClient, errors::PostgresError, types::PostgresQuery},
-    errors::DatabaseError,
-    params::BindParameters,
-    test_utils::TestDatabase,
-    Database, DatabaseTable
+    errors::DatabaseError, params::BindParameters, postgres::{client::PostgresClient, dbms::PostgresDBMS, errors::PostgresError, types::PostgresQuery}, test_utils::TestDatabase, Database, DatabaseTable
 };
 
 #[derive(Clone)]
-pub struct PostgresTestClient<D> {
+pub struct PostgresTestClient<D> 
+where D: PostgresDBMS {
     pub client: PostgresClient<D>
 }
 

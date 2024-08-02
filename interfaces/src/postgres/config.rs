@@ -1,7 +1,8 @@
 use core::marker::PhantomData;
 
 use hyper_tls::HttpsConnector;
-use sqlx::{PgPool, Pool};
+use sqlx::{postgres::{PgConnectOptions, PgSslMode}, PgPool, Pool};
+use sqlx::ConnectOptions;
 
 use super::{client::PostgresClient, dbms::PostgresDBMS};
 
@@ -21,19 +22,16 @@ impl PostgresConfig {
         Self { host, port, user, password, url, https, database }
     }
 
-    pub async fn build<D: PostgresDBMS>(self) -> PostgresClient<D> {
-        let options = PgConnectOptions::new()
-            .host(self.host)
-            .port(self.port)
-            .username(self.user)
-            .password(self.password)
-            .ssl_mode(PgSslMode::Require)
-            .connect()
-            .await?;
-        let pool = PgPool::connect_with(&options).await?;
-
-        PostgresClient { pool, _phantom: PhantomData }
-    }
+    // pub async fn build<D: PostgresDBMS>(self) -> Result<PostgresClient<D>, Error> {
+    //     let conn = PgConnectOptions::new()
+    //         .host(&self.host)
+    //         .port(self.port)
+    //         .username(&self.user)
+    //         .password(&self.password)
+    //         .ssl_mode(PgSslMode::Require);
+    //     let pool = Pool::connect_lazy_with(conn);
+    //     Ok(PostgresClient { pool, _phantom: PhantomData })
+    // }
 
     // #[cfg(feature = "test-utils")]
     // pub fn build_testing_client<D: PostgresDBMS>(self) -> crate::postgres::test_utils::PostgresTestClient<D> {
