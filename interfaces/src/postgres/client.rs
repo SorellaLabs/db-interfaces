@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use alloy_primitives::bytes::BytesMut;
 use eyre::Result;
 use sqlx::{query, query_as_unchecked, query_builder, query_with, Encode, Pool, Type};
 
