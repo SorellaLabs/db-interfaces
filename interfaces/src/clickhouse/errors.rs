@@ -2,19 +2,11 @@ use std::fmt::Debug;
 
 use thiserror::Error;
 
-use crate::errors::DatabaseError;
-
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug)]
 pub enum ClickhouseError {
-    #[error("database connection error: {0}")]
-    ConnectionError(String),
-    #[error("error building the query: {0}")]
-    QueryBuildingError(String),
-    #[error("error inserting into the database: {0}")]
-    InsertError(String),
-    #[error("error querying from the database: {0}")]
-    QueryError(String),
-    #[error("error reading sql file: {0}")]
+    #[error("clickhouse error: {0}")]
+    ClickhouseNative(clickhouse::error::Error),
+    #[error("error reading clickhouse sql file: {0}")]
     SqlFileReadError(String)
 }
 
@@ -24,8 +16,8 @@ impl From<std::io::Error> for ClickhouseError {
     }
 }
 
-impl From<ClickhouseError> for DatabaseError {
-    fn from(value: ClickhouseError) -> DatabaseError {
-        DatabaseError { error: value.to_string() }
+impl From<clickhouse::error::Error> for ClickhouseError {
+    fn from(value: clickhouse::error::Error) -> ClickhouseError {
+        ClickhouseError::ClickhouseNative(value)
     }
 }

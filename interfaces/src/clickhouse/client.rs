@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use clickhouse::{query::Query, *};
 use eyre::Result;
 
-use super::{dbms::ClickhouseDBMS, errors::ClickhouseError, types::ClickhouseQuery};
+use super::{dbms::ClickhouseDBMS, types::ClickhouseQuery};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
 
 #[derive(Clone)]
@@ -39,18 +39,11 @@ where
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
-            .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+            .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())?;
 
-        insert
-            .write(value)
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.write(value).await?;
 
-        insert
-            .end()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.end().await?;
 
         Ok(())
     }
@@ -58,20 +51,13 @@ where
     async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         let mut insert = self
             .client
-            .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+            .insert(Self::DBMS::from_database_table_str(T::NAME).full_name())?;
 
         for value in values {
-            insert
-                .write(value)
-                .await
-                .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+            insert.write(value).await?;
         }
 
-        insert
-            .end()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.end().await?;
 
         Ok(())
     }
@@ -79,10 +65,7 @@ where
     async fn query_one<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Q, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
-        let res = query
-            .fetch_one::<Q>()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
+        let res = query.fetch_one::<Q>().await?;
 
         Ok(res)
     }
@@ -94,10 +77,7 @@ where
     ) -> Result<Option<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
-        let res = query
-            .fetch_optional::<Q>()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
+        let res = query.fetch_optional::<Q>().await?;
 
         Ok(res)
     }
@@ -105,29 +85,20 @@ where
     async fn query_many<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<Q>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
-        let res = query
-            .fetch_all::<Q>()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
+        let res = query.fetch_all::<Q>().await?;
 
         Ok(res)
     }
 
     async fn query_raw<Q: ClickhouseQuery, P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<Vec<u8>, DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
-        query
-            .fetch_raw::<Q>()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))
+        Ok(query.fetch_raw::<Q>().await?)
     }
 
     async fn execute_remote<P: BindParameters>(&self, query: impl AsRef<str> + Send, params: &P) -> Result<(), DatabaseError> {
         let query = params.bind_query(self.client.query(query.as_ref()));
 
-        query
-            .execute()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::QueryError(e.to_string())))?;
+        query.execute().await?;
 
         Ok(())
     }

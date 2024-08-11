@@ -6,7 +6,7 @@ use rand::Rng;
 
 use super::ClickhouseTestDBMS;
 use crate::{
-    clickhouse::{client::ClickhouseClient, errors::ClickhouseError, types::ClickhouseQuery},
+    clickhouse::{client::ClickhouseClient, types::ClickhouseQuery},
     errors::DatabaseError,
     params::BindParameters,
     test_utils::TestDatabase,
@@ -77,44 +77,24 @@ where
 
     async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
-        let mut insert = self
-            .client
-            .client
-            .insert(table)
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        let mut insert = self.client.client.insert(table)?;
 
-        insert
-            .write(value)
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.write(value).await?;
 
-        insert
-            .end()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.end().await?;
 
         Ok(())
     }
 
     async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         let table = format!("test_{}", Self::DBMS::from_database_table_str(T::NAME).full_name());
-        let mut insert = self
-            .client
-            .client
-            .insert(table)
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        let mut insert = self.client.client.insert(table)?;
 
         for value in values {
-            insert
-                .write(value)
-                .await
-                .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+            insert.write(value).await?;
         }
 
-        insert
-            .end()
-            .await
-            .map_err(|e| DatabaseError::from(ClickhouseError::InsertError(e.to_string())))?;
+        insert.end().await?;
 
         Ok(())
     }
