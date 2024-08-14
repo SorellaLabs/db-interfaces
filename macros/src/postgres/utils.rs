@@ -2,19 +2,19 @@ use std::{env, fs, io, io::BufRead, path};
 
 use syn::LitStr;
 
-pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: Option<&LitStr>) -> String {
+pub(crate) fn find_file_path(table_name: &str, schema_name: &str, table_path: Option<&LitStr>) -> String {
     dotenv::dotenv().ok();
     let root_path = workspace_dir();
     let path = root_path.to_str().unwrap();
 
-    let clickhouse_table_dir = if let Some(tp) = table_path {
+    let postgres_table_dir = if let Some(tp) = table_path {
         format!("{path}/{}", tp.value())
     } else {
         return "".to_string();
     };
 
     let mut pathsss = Vec::new();
-    if let Ok(entries) = visit_dirs(path::Path::new(&clickhouse_table_dir)) {
+    if let Ok(entries) = visit_dirs(path::Path::new(&postgres_table_dir)) {
         for entry in entries {
             let entry_path = entry.path();
             if let Ok(lines) = read_lines(&entry_path) {
@@ -22,7 +22,7 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
                     if i == 0 {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
-                    if check_line(ln, table_name, database_name) {
+                    if check_line(ln, table_name, schema_name) {
                         return entry.path().to_str().unwrap().to_string();
                     }
                 }
@@ -31,7 +31,7 @@ pub(crate) fn find_file_path(table_name: &str, database_name: &str, table_path: 
     }
 
     panic!(
-        "NO FILE FOUND FOR DATABASE: {database_name}, TABLE: {table_name} for in directory: {clickhouse_table_dir}\n\nPATHS SEARCHED {:?}",
+        "NO FILE FOUND FOR SCHEMA: {schema_name}, TABLE: {table_name} for in directory: {postgres_table_dir}\n\nPATHS SEARCHED {:?}",
         pathsss
     );
 }
@@ -74,9 +74,9 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn check_line(ln: String, table_name: &str, database_name: &str) -> bool {
-    let formatted = ln.contains(&format!("{}.{} ", database_name, table_name.to_lowercase()));
-    let remote = ln.contains(&format!("{}.{}_remote ", database_name, table_name.to_lowercase()));
+fn check_line(ln: String, table_name: &str, schema_name: &str) -> bool {
+    let formatted = ln.contains(&format!("{}.{} ", schema_name, table_name.to_lowercase()));
+    let remote = ln.contains(&format!("{}.{}_remote ", schema_name, table_name.to_lowercase()));
 
     let create = ln.contains("CREATE");
 
