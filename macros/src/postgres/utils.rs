@@ -19,7 +19,7 @@ pub(crate) fn find_file_path(table_name: &str, schema_name: &str, table_path: Op
             let entry_path = entry.path();
             if let Ok(lines) = read_lines(&entry_path) {
                 for (i, ln) in lines.map_while(Result::ok).enumerate() {
-                    if i == 0 {
+                    if i == 0 || table_name.to_lowercase() == "block_analysis" {
                         pathsss.push((entry_path.clone(), ln.clone()));
                     }
                     if check_line(ln, table_name, schema_name) {
@@ -80,5 +80,8 @@ fn check_line(ln: String, table_name: &str, schema_name: &str) -> bool {
 
     let create = ln.contains("CREATE");
 
+    if table_name.to_lowercase() == "block_analysis" {
+        println!("{ln}, {}", (formatted || remote) && create);
+    }
     (formatted || remote) && create
 }
