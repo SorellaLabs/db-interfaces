@@ -4,8 +4,6 @@ use super::client::PostgresClient;
 use crate::errors::DatabaseError;
 
 pub trait PostgresDBMS: Sized + Sync + Send + sqlx::Database {
-    const CLUSTER: Option<&'static str>;
-
     fn dependant_tables(&self) -> &[Self];
 
     fn create_table<'a>(
@@ -21,6 +19,35 @@ pub trait PostgresDBMS: Sized + Sync + Send + sqlx::Database {
     fn db_name(&self) -> String;
 
     fn from_database_table_str(val: &str) -> Self;
+}
+
+impl PostgresDBMS for sqlx::Postgres {
+    fn dependant_tables(&self) -> &[Self] {
+        todo!()
+    }
+
+    fn create_table<'a>(
+        &'a self,
+        database: &'a PostgresClient<Self>
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
+        todo!()
+    }
+
+    fn all_tables() -> Vec<Self> {
+        todo!()
+    }
+
+    fn full_name(&self) -> String {
+        todo!()
+    }
+
+    fn db_name(&self) -> String {
+        todo!()
+    }
+
+    fn from_database_table_str(val: &str) -> Self {
+        todo!()
+    }
 }
 
 #[cfg(not(feature = "test-utils"))]
