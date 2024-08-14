@@ -9,7 +9,7 @@ repository.workspace = true
 
 
 [dependencies]
-db-interfaces = { path = "../interfaces", features = ["alloy-types", "test-utils"]}
+db-interfaces = { path = "../interfaces", features = ["alloy-types"]}
 
 # clickhouse
 clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master" }

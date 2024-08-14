@@ -3,7 +3,7 @@ use std::pin::Pin;
 use super::client::PostgresClient;
 use crate::errors::DatabaseError;
 
-pub trait PostgresDBMS: Sized + Sync + Send + sqlx::Database {
+pub trait PostgresDBMS: Sized + Sync + Send {
     fn dependant_tables(&self) -> &[Self];
 
     fn create_table<'a>(
@@ -51,21 +51,10 @@ impl PostgresDBMS for sqlx::Postgres {
 }
 
 #[cfg(not(feature = "test-utils"))]
-/// There are 2 possible inputs, for tables (not) in a distributed setup
+/// There is one possible input
 ///
-/// With distributed:
 /// 1. enum name for the DBMS
-/// 2. cluster name
-/// 3. set of tables
-///
-/// Example:
-/// ```
-/// db_interfaces::postgres_dbms!(ExampleDBMS0, "cluster1", [Table0, Table1])
-/// ```
-///
-/// Without distributed:
-/// 1. enum name for the DBMS
-/// 3. set of tables
+/// 2. set of tables
 ///
 /// Example:
 /// ```
@@ -74,14 +63,6 @@ impl PostgresDBMS for sqlx::Postgres {
 #[macro_export]
 macro_rules! postgres_dbms {
     ($dbms:ident, [$($table:ident),*]) => {
-        postgres_dbms!(INTERNAL, $dbms, None, [$($table,)*]);
-    };
-
-    ($dbms:ident, $cluster:expr, [$($table:ident),*]) => {
-        postgres_dbms!(INTERNAL, $dbms, Some($cluster), [$($table,)*]);
-    };
-
-    (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -92,8 +73,6 @@ macro_rules! postgres_dbms {
         }
 
         impl ::db_interfaces::postgres::dbms::PostgresDBMS for $dbms {
-            const CLUSTER: Option<&'static str> = $cluster;
-
              fn dependant_tables(&self) -> &[Self] {
                 match self {
                     $($dbms::$table => {
@@ -148,21 +127,10 @@ macro_rules! postgres_dbms {
 }
 
 #[cfg(feature = "test-utils")]
-/// There are 2 possible inputs, for tables (not) in a distributed setup
+/// There is 1 possible input
 ///
-/// With distributed:
 /// 1. enum name for the DBMS
-/// 2. cluster name
-/// 3. set of tables
-///
-/// Example:
-/// ```
-/// db_interfaces::postgres_dbms!(ExampleDBMS0, "cluster1", [Table0, Table1])
-/// ```
-///
-/// Without distributed:
-/// 1. enum name for the DBMS
-/// 3. set of tables
+/// 2. set of tables
 ///
 /// Example:
 /// ```
@@ -171,14 +139,10 @@ macro_rules! postgres_dbms {
 #[macro_export]
 macro_rules! postgres_dbms {
     ($dbms:ident, [$($table:ident),*]) => {
-        postgres_dbms!(INTERNAL, $dbms, None, [$($table,)*]);
+        postgres_dbms!(INTERNAL, $dbms, [$($table,)*]);
     };
 
-    ($dbms:ident, $cluster:expr, [$($table:ident),*]) => {
-        postgres_dbms!(INTERNAL, $dbms, Some($cluster), [$($table,)*]);
-    };
-
-    (INTERNAL, $dbms:ident, $cluster:expr, [$($table:ident,)*]) => {
+    (INTERNAL, $dbms:ident, [$($table:ident,)*]) => {
         #[allow(non_camel_case_types)]
         #[derive(Debug, PartialEq, Eq, Clone, Hash)]
         pub enum $dbms {
@@ -189,7 +153,6 @@ macro_rules! postgres_dbms {
         }
 
         impl ::db_interfaces::postgres::dbms::PostgresDBMS for $dbms {
-            const CLUSTER: Option<&'static str> = $cluster;
 
              fn dependant_tables(&self) -> &[Self] {
                 match self {
@@ -281,50 +244,49 @@ macro_rules! postgres_dbms {
 #[derive(Debug, Default, Clone)]
 pub struct NullDBMS;
 
-// impl PostgresDBMS for NullDBMS {
-//     const CLUSTER: Option<&'static str> = None;
+impl PostgresDBMS for NullDBMS {
 
-//     fn dependant_tables(&self) -> &[Self] {
-//         &[]
-//     }
+    fn dependant_tables(&self) -> &[Self] {
+        &[]
+    }
 
-//     fn create_table(&self, _database: &PostgresClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
-//         Box::pin(async { Ok(()) })
-//     }
+    fn create_table(&self, _database: &PostgresClient<Self>) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send>> {
+        Box::pin(async { Ok(()) })
+    }
 
-//     fn all_tables() -> Vec<Self> {
-//         Vec::new()
-//     }
+    fn all_tables() -> Vec<Self> {
+        Vec::new()
+    }
 
-//     /// <DB NAME>.<TABLE NAME>
-//     fn full_name(&self) -> String {
-//         String::new()
-//     }
+    /// <DB NAME>.<TABLE NAME>
+    fn full_name(&self) -> String {
+        String::new()
+    }
 
-//     fn db_name(&self) -> String {
-//         String::new()
-//     }
+    fn db_name(&self) -> String {
+        String::new()
+    }
 
-//     fn from_database_table_str(_val: &str) -> Self {
-//         Self
-//     }
-// }
+    fn from_database_table_str(_val: &str) -> Self {
+        Self
+    }
+}
 
-// #[cfg(feature = "test-utils")]
-// impl crate::postgres::test_utils::PostgresTestDBMS for NullDBMS {
-//     fn create_test_table<'a>(
-//         &'a self,
-//         _database: &'a crate::postgres::test_utils::PostgresTestClient<Self>,
-//         _random_seed: u32
-//     ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
-//         Box::pin(async { Ok(()) })
-//     }
+#[cfg(feature = "test-utils")]
+impl crate::postgres::test_utils::PostgresTestDBMS for NullDBMS {
+    fn create_test_table<'a>(
+        &'a self,
+        _database: &'a crate::postgres::test_utils::PostgresTestClient<Self>,
+        _random_seed: u32
+    ) -> Pin<Box<dyn std::future::Future<Output = Result<(), DatabaseError>> + Send + 'a>> {
+        Box::pin(async { Ok(()) })
+    }
 
-//     async fn drop_test_db(&self, _database: &crate::postgres::test_utils::PostgresTestClient<Self>) -> Result<(), DatabaseError> {
-//         Ok(())
-//     }
+    async fn drop_test_db(&self, _database: &crate::postgres::test_utils::PostgresTestClient<Self>) -> Result<(), DatabaseError> {
+        Ok(())
+    }
 
-//     fn test_db_name(&self) -> String {
-//         String::new()
-//     }
-// }
+    fn test_db_name(&self) -> String {
+        String::new()
+    }
+}

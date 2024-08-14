@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use eyre::Result;
-use sqlx::{query, query_as_unchecked, query_builder, query_with, Encode, Pool, Type};
+use sqlx::{query, query_as_unchecked, query_builder, query_with, Encode, Pool, Postgres, Type};
 
 use super::{dbms::PostgresDBMS, errors::PostgresError, types::{PostgresParam, PostgresQuery, PostgresResult}};
 use crate::{errors::DatabaseError, params::BindParameters, Database, DatabaseTable};
@@ -10,7 +10,7 @@ use futures::TryStreamExt;
 
 #[derive(Clone)]
 pub struct PostgresClient<D: PostgresDBMS> {
-    pub pool:     Pool<D>,
+    pub pool:     Pool<Postgres>,
     pub _phantom: PhantomData<D>,
 }
 
@@ -36,11 +36,11 @@ impl<D> PostgresClient<D>
 where
     D: PostgresDBMS
 {
-    async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
+    pub async fn insert_one<T: DatabaseTable>(&self, value: &T::DataType) -> Result<(), DatabaseError> {
         Ok(())
     }
 
-    async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
+    pub async fn insert_many<T: DatabaseTable>(&self, values: &[T::DataType]) -> Result<(), DatabaseError> {
         Ok(())
     }
 
