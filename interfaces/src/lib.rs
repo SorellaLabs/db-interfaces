@@ -14,6 +14,7 @@ pub mod test_utils;
 
 use clickhouse::types::ClickhouseQuery;
 pub use db_interfaces_macros::remote_clickhouse_table;
+pub use db_interfaces_macros::postgres_table;
 use errors::DatabaseError;
 use params::BindParameters;
 use tables::*;
