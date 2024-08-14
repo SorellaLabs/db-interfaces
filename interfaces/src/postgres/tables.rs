@@ -3,34 +3,16 @@
 use super::{client::PostgresClient, dbms::PostgresDBMS, errors::PostgresError, types::PostgresInsert};
 use crate::{errors::DatabaseError, Database};
 
-#[derive(Default, Debug, PartialEq, Eq, Clone)]
-pub enum PostgresTableKind {
-    Distributed,
-    Remote,
-    RemoteSecure,
-    ReplicatedMergeTree,
-    ReplicatedAggregatingMergeTree,
-    ReplicatedReplacingMergeTree,
-    MergeTree,
-    AggregatingMergeTree,
-    ReplacingMergeTree,
-    MaterializedView,
-    Null,
-    #[default]
-    None
-}
-
 /// trait for different implementations of postgres tables
 //#[async_trait::async_trait]
 pub trait PostgresTable<D>: Send + Sync
 where
     D: PostgresDBMS + Send + Sync + 'static
 {
-    const DATABASE_NAME: &'static str;
+    const SCHEMA_NAME: &'static str;
     const TABLE_NAME: &'static str;
     const FILE_PATH: &'static str;
     const CHILD_TABLES: &'static [D];
-    const TABLE_TYPE: PostgresTableKind;
     const TABLE_ENUM: D;
     type PostgresDataType: PostgresInsert;
 
@@ -50,12 +32,12 @@ where
     }
 
     /// name of the database
-    fn database_name() -> String {
-        Self::DATABASE_NAME.to_string()
+    fn schema_name() -> String {
+        Self::SCHEMA_NAME.to_string()
     }
 
     /// full name <DATABASE NAME>.<TABLE NAME>
     fn full_name() -> String {
-        format!("{}.{}", Self::DATABASE_NAME, Self::TABLE_NAME)
+        format!("{}.{}", Self::SCHEMA_NAME, Self::TABLE_NAME)
     }
 }
