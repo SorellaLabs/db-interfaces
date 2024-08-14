@@ -96,7 +96,7 @@ macro_rules! postgres_dbms {
             fn db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::postgres::tables::PostgresTable<Self>>::database_name()
+                        <$table as ::db_interfaces::postgres::tables::PostgresTable<Self>>::schema_name()
                     })*
                 }
             }
@@ -177,7 +177,7 @@ macro_rules! postgres_dbms {
             fn db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::postgres::tables::PostgresTable<Self>>::database_name()
+                        <$table as ::db_interfaces::postgres::tables::PostgresTable<Self>>::schema_name()
                     })*
                 }
             }
@@ -232,7 +232,7 @@ macro_rules! postgres_dbms {
             fn test_db_name(&self) -> String {
                 match self {
                     $($dbms::$table => {
-                        <$table as ::db_interfaces::postgres::test_utils::PostgresTestTable<Self>>::test_database_name()
+                        <$table as ::db_interfaces::postgres::test_utils::PostgresTestTable<Self>>::test_schema_name()
                     })*
                 }
             }
