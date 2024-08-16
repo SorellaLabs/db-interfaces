@@ -29,3 +29,9 @@ impl From<PostgresError> for DatabaseError {
         DatabaseError { error: value.to_string() }
     }
 }
+
+impl From<sqlx::Error> for DatabaseError {
+    fn from(value: sqlx::Error) -> DatabaseError {
+        DatabaseError { error: value.to_string() }
+    }
+}
