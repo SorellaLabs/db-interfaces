@@ -8,7 +8,7 @@ use crate::DatabaseQuery;
 pub struct NoneType();
 
 pub trait PostgresInsert: Send + Sync + 'static + DynClone + Sized {}
-impl<T> PostgresInsert for T where T: Serialize + InsertRow + Send + Sync + 'static + DynClone + Sized {}
+impl<T> PostgresInsert for T where T: Serialize + Send + Sync + 'static + DynClone + Sized {}
 
 pub trait PostgresQuery {
     const QUERY: &'static str;
