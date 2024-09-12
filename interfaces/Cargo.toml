@@ -18,7 +18,7 @@ serde_json = "1.0"
 erased-serde = "0.3.31"
 
 # clickhouse 
-clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["tls", "time"] }
+clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["time"] }
 
 # error handling
 eyre = "0.6.5"
@@ -55,6 +55,7 @@ paste = "1.0.14"
 
 [features]
 default = []
+tls = ["clickhouse/tls"]
 alloy-types = ["dep:alloy-primitives"]
 
 test-utils = ["db-interfaces-macros/test-utils"]
