@@ -18,7 +18,9 @@ serde_json = "1.0"
 erased-serde = "0.3.31"
 
 # clickhouse 
-clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "master", features = ["time"] }
+clickhouse = { git = "https://github.com/SorellaLabs/clickhouse.rs", branch = "hope", features = [
+    "time",
+] }
 
 # error handling
 eyre = "0.6.5"
@@ -29,8 +31,9 @@ tokio = { version = "1.28.2", features = ["full"] }
 futures = "0.3.28"
 
 # http/s
-hyper-tls = "0.5.0"
-hyper = { version = "0.14", features = ["full"] }
+hyper-tls = "0.6.0"
+hyper = { version = "1.4", features = ["full"] }
+hyper-util = { version = "0.1.6", features = ["client-legacy", "http1"] }
 reqwest = { version = "0.12.2", features = ["json"] }
 
 
@@ -55,7 +58,7 @@ paste = "1.0.14"
 
 [features]
 default = []
-tls = ["clickhouse/tls"]
+tls = ["clickhouse/native-tls"]
 alloy-types = ["dep:alloy-primitives"]
 
 test-utils = ["db-interfaces-macros/test-utils"]

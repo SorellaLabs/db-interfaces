@@ -1,8 +1,11 @@
 use core::marker::PhantomData;
 
 use clickhouse::Client;
-use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
+use hyper_util::{
+    client::legacy::{connect::HttpConnector, Client as HyperClient},
+    rt::TokioExecutor
+};
 
 use super::{client::ClickhouseClient, dbms::ClickhouseDBMS};
 
@@ -23,9 +26,9 @@ impl ClickhouseConfig {
     pub fn build<D: ClickhouseDBMS>(self) -> ClickhouseClient<D> {
         let mut client = if self.https {
             let connector = HttpsConnector::new();
-            let https_client = hyper::Client::builder()
+            let https_client = HyperClient::builder(TokioExecutor::default())
                 .pool_idle_timeout(std::time::Duration::from_secs(2))
-                .build::<_, hyper::Body>(connector);
+                .build(connector);
             Client::with_http_client(https_client)
                 .with_url(self.url)
                 .with_user(self.user)
@@ -33,7 +36,7 @@ impl ClickhouseConfig {
         } else {
             let mut connector = HttpConnector::new();
             connector.set_keepalive(Some(std::time::Duration::from_secs(290)));
-            let http_client = hyper::Client::builder()
+            let http_client = HyperClient::builder(TokioExecutor::default())
                 .pool_idle_timeout(std::time::Duration::from_secs(2))
                 .build(connector);
             Client::with_http_client(http_client)
@@ -53,7 +56,7 @@ impl ClickhouseConfig {
     pub fn build_testing_client<D: ClickhouseDBMS>(self) -> crate::clickhouse::test_utils::ClickhouseTestClient<D> {
         let mut client = if self.https {
             let https = HttpsConnector::new();
-            let https_client = hyper::Client::builder().build::<_, hyper::Body>(https);
+            let https_client = HyperClient::builder(TokioExecutor::default()).build(https);
             Client::with_http_client(https_client)
                 .with_url(self.url)
                 .with_user(self.user)
