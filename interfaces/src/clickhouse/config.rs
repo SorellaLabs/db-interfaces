@@ -1,6 +1,7 @@
 use core::marker::PhantomData;
 
 use clickhouse::Client;
+use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
 
 use super::{client::ClickhouseClient, dbms::ClickhouseDBMS};
@@ -21,14 +22,21 @@ impl ClickhouseConfig {
 
     pub fn build<D: ClickhouseDBMS>(self) -> ClickhouseClient<D> {
         let mut client = if self.https {
-            let https = HttpsConnector::new();
-            let https_client = hyper::Client::builder().build::<_, hyper::Body>(https);
+            let connector = HttpsConnector::new();
+            let https_client = hyper::Client::builder()
+                .pool_idle_timeout(std::time::Duration::from_secs(2))
+                .build::<_, hyper::Body>(connector);
             Client::with_http_client(https_client)
                 .with_url(self.url)
                 .with_user(self.user)
                 .with_password(self.password)
         } else {
-            Client::default()
+            let mut connector = HttpConnector::new();
+            connector.set_keepalive(Some(std::time::Duration::from_secs(60)));
+            let http_client = hyper::Client::builder()
+                .pool_idle_timeout(std::time::Duration::from_secs(2))
+                .build(connector);
+            Client::with_http_client(http_client)
                 .with_url(self.url)
                 .with_user(self.user)
                 .with_password(self.password)
