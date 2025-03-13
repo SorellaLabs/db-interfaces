@@ -32,7 +32,7 @@ impl ClickhouseConfig {
                 .with_password(self.password)
         } else {
             let mut connector = HttpConnector::new();
-            connector.set_keepalive(Some(std::time::Duration::from_secs(60)));
+            connector.set_keepalive(Some(std::time::Duration::from_secs(290)));
             let http_client = hyper::Client::builder()
                 .pool_idle_timeout(std::time::Duration::from_secs(2))
                 .build(connector);
